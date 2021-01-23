@@ -27,6 +27,9 @@ class BeoPlay(object):
         self.media_artist = None
         self.media_album = None
         self.primary_experience = None
+        self._serialNumber = None
+        self._typeNumber = None
+        self._itemNumber = None
 
     def _getReq(self, path):
         try:
@@ -45,6 +48,7 @@ class BeoPlay(object):
 
     def _postReq(self, type, path, data):
         try:
+            r = None
             if self._connfail:
                 LOG.debug("Connfail: %i", self._connfail)
                 self._connfail -= 1
@@ -58,10 +62,11 @@ class BeoPlay(object):
                     r = requests.post(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
             if type == "DELETE":
                 r = requests.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
-            if r.status_code == 200:
-                return True
-            else:
-                return False
+            if r:
+                if r.status_code == 200:
+                    return True
+            
+            return False
         except requests.exceptions.RequestException as err:
             LOG.debug("Exception: %s", str(err))
             self._connfail = CONNFAILCOUNT
@@ -87,15 +92,19 @@ class BeoPlay(object):
         if data["notification"]["type"] == "SOURCE":
             self.primary_experience = data["primary"]
 
-    
+# edited to only include in Use sources    
     def getSources(self):
         r = self._getReq('BeoZone/Zone/Sources')
         if r:
             for elements in r:
                 i = 0
                 while i < len(r[elements]):
-                    self.sources.append(r[elements][i][1]["friendlyName"])
-                    self.sourcesID.append(r[elements][i][0])
+                    if r[elements][i][1]["inUse"] == True:
+                        if r[elements][i][1]["borrowed"] == True:
+                            self.sources.append("\U0001F517 " + r[elements][i][1]["friendlyName"])
+                        else:
+                            self.sources.append(r[elements][i][1]["friendlyName"])
+                        self.sourcesID.append(r[elements][i][0])
                     i += 1
 
     def getState(self, data):
@@ -124,6 +133,14 @@ class BeoPlay(object):
                 self.media_url = data["notification"]["data"]["image"][0]["url"]
             if 'liveDescription' in data["notification"]["data"]:
                 self.media_track = data["notification"]["data"]["liveDescription"]
+    
+    def getDeviceInfo(self):
+        r = self._getReq("BeoDevice")
+        if r:
+            self._serialNumber = r["beoDevice"]["productId"]["serialNumber"]
+            self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
+            self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
+            self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
 
     ###############################################################
     # COMMANDS
@@ -181,4 +198,18 @@ class BeoPlay(object):
 
     def leaveExperience(self):
         self._postReq('DELETE','BeoZone/Zone/ActiveSources/primaryExperience', '')
+
+
+if __name__ == '__main__':
+    import sys
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.INFO)
+    LOG.addHandler(ch)
+
+    if len(sys.argv) < 2:
+        quit()
+
+    gateway = BeoPlay(sys.argv[1])
+    gateway.getSources()
+    print (gateway.sources)
 

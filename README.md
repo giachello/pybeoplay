@@ -1,8 +1,8 @@
 # ha-beoplay
 
-Beoplay python wrapper to integrate B&amp;O speakers/TVs to Home Assistant
+Beoplay python wrapper to integrate B&amp;O speakers/TVs to Python
 
-API wrapped to an object that can be used with Home Assistant custom component.
+API wrapped to an object that can be used with to read the state and control BeoPlay devices.
 
 Currently gets the following attributes:
 - volume
