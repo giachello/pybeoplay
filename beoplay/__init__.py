@@ -263,6 +263,13 @@ if __name__ == '__main__':
     print (gateway.sourcesID)
     print (gateway.sourcesBorrowed)
     
-    gateway.PlayQueue(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
-    gateway.PlayQueue(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
+    gateway.getStandPositions()
+    print (gateway.standPositions)
+    print (gateway.standPositionsID)
+
+    gateway.getStandPosition()
+    print ("Stand Position: ", gateway._standPosition)
+
+    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
+    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
 
