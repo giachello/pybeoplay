@@ -1,3 +1,9 @@
+#
+# BeoPlay JSON interface for Bang & Olufsen Speakers, TVs and other NL devices
+# Reference: https://documenter.getpostman.com/view/1053298/T1LTe4Lt#intro
+# Lifted a lot of code from marton borzak's ha-beoplay
+#
+
 import requests
 import json
 import logging
@@ -21,6 +27,7 @@ class BeoPlay(object):
         self.source = None
         self.sources = []
         self.sourcesID = []
+        self.sourcesBorrowed = []
         self.state = None
         self.media_url = None
         self.media_track = None
@@ -30,6 +37,10 @@ class BeoPlay(object):
         self._serialNumber = None
         self._typeNumber = None
         self._itemNumber = None
+        self._standPosition = None
+        self.standPositions = []
+        self.standPositionsID = []
+
 
     def _getReq(self, path):
         try:
@@ -63,9 +74,9 @@ class BeoPlay(object):
             if type == "DELETE":
                 r = requests.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
             if r:
+                LOG.debug("Response: %s", r.content)
                 if r.status_code == 200:
                     return True
-            
             return False
         except requests.exceptions.RequestException as err:
             LOG.debug("Exception: %s", str(err))
@@ -100,10 +111,8 @@ class BeoPlay(object):
                 i = 0
                 while i < len(r[elements]):
                     if r[elements][i][1]["inUse"] == True:
-                        if r[elements][i][1]["borrowed"] == True:
-                            self.sources.append("\U0001F517 " + r[elements][i][1]["friendlyName"])
-                        else:
-                            self.sources.append(r[elements][i][1]["friendlyName"])
+                        self.sourcesBorrowed.append(r[elements][i][1]["borrowed"])
+                        self.sources.append(r[elements][i][1]["friendlyName"])
                         self.sourcesID.append(r[elements][i][0])
                     i += 1
 
@@ -119,6 +128,22 @@ class BeoPlay(object):
                 self.on = True
             else:
                 self.on = False
+
+    def getStandPosition(self):
+        r = self._getReq('BeoZone/Zone/Stand/Active')
+        if r:
+            if r["active"] is not None:
+                self._standPosition = r["active"]
+
+    def getStandPositions(self):
+        r = self._getReq('BeoZone/Zone/Stand')
+        if r:
+            for elements in r:
+                i = 0
+                while i < len(r[elements]):
+                    self.standPositions.append(r[elements][i][1]["friendlyName"])
+                    self.standPositionsID.append(r[elements][i][0])
+                    i += 1
 
     def getMusicInfo(self, data):
         if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC" and data["notification"]["data"]["trackImage"]:
@@ -193,23 +218,51 @@ class BeoPlay(object):
                 self._postReq('POST','BeoZone/Zone/ActiveSources', {"primaryExperience":{"source":{"id":chosenSource}}})
             i += 1
 
+    def setStandPosition(self, standPosition):
+        i = 0
+        while i < len(self.standPositions):
+            if self.standPositions[i] == standPosition:
+                chosenStandPosition = self.standPositionsID[i]
+                self._postReq('PUT','BeoZone/Zone/Stand/Active', {"active":chosenStandPosition})
+            i += 1
+
     def joinExperience(self):
         self._postReq('POST','BeoZone/Zone/Device/OneWayJoin','')
 
     def leaveExperience(self):
         self._postReq('DELETE','BeoZone/Zone/ActiveSources/primaryExperience', '')
 
+    def playQueueItem(self, instantplay: bool, queueItem: dict):
+        if instantplay:
+            self._postReq('POST','BeoZone/Zone/PlayQueue?instantplay',queueItem)
+        else:
+            self._postReq('POST','BeoZone/Zone/PlayQueue',queueItem)
+
 
 if __name__ == '__main__':
     import sys
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+    ch.setLevel(logging.DEBUG)
     LOG.addHandler(ch)
 
     if len(sys.argv) < 2:
         quit()
 
     gateway = BeoPlay(sys.argv[1])
+
+    gateway.getDeviceInfo()
+    print ("Serial Number: " , gateway._serialNumber)
+    print ("Type Number: ", gateway._typeNumber)
+    print ("Item Number: ",gateway._itemNumber)
+    print ("Name: ",gateway._name)
+    
+
     gateway.getSources()
     print (gateway.sources)
+    print (gateway.sourcesID)
+    print (gateway.sourcesBorrowed)
+    
+    gateway.PlayQueue(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
+    gateway.PlayQueue(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
 

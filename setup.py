@@ -19,7 +19,7 @@ setup(
         license='MIT License',
         url='https://github.com/giachello/py-beoplay',
         download_url='https://github.com/giachello/py-beoplay/tarball/'+VERSION,
-        author='Marton Borzak',
+        author='Giovanni Iachello',
         author_email='giac@clovermail.net',
         description='BeoPlay API for Python',
         packages=PACKAGES,
