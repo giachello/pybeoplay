@@ -5,7 +5,7 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-PACKAGE_NAME = 'py-beoplay'
+PACKAGE_NAME = 'pybeoplay'
 HERE = os.path.abspath(os.path.dirname(__file__))
 VERSION = '0.0.8'
 
@@ -27,7 +27,7 @@ setup(
         zip_safe=False,
         platforms='any',
         install_requires=REQUIRES,
-        keywords=['beoplay'],
+        keywords=['beoplay', 'pybeoplay', 'B&O' , 'Bang & Olufsen'],
         classifiers=[
             'Intended Audience :: Developers',
             'License :: OSI Approved :: MIT License',
