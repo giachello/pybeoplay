@@ -1,4 +1,4 @@
-# ha-beoplay 
+# pybeoplay 
 
 Beoplay python wrapper to integrate B&amp;O speakers/TVs to Python
 
@@ -17,6 +17,7 @@ Currently gets the following attributes:
 - album
 - song(name) (if available)
 - description (if available)
+- stand positions
 
 The following commands are avialable:
 - set volume
@@ -31,3 +32,5 @@ The following commands are avialable:
 - set source
 - join experience
 - leave experience
+- play queue item
+- set stand position
