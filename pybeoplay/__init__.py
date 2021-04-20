@@ -1,6 +1,7 @@
 #
 # BeoPlay JSON interface for Bang & Olufsen Speakers, TVs and other NL devices
 # Reference: https://documenter.getpostman.com/view/1053298/T1LTe4Lt#intro
+# Reference: https://raw.githubusercontent.com/PolyPv/BeoRemote/master/BeoRemote.txt
 # Lifted a lot of code from marton borzak's ha-beoplay
 #
 
