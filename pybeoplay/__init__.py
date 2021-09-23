@@ -99,6 +99,10 @@ class BeoPlay(object):
         if data["notification"]["type"] == "SOURCE" and data["notification"]["data"]:
             self.source = data["notification"]["data"]["primaryExperience"]["source"]["friendlyName"]
             self.on = True
+            self.media_url = None
+            self.media_track = None
+            self.media_artist = None
+            self.media_album = None
 
     def getPrimaryExperience(self, data):
         if data["notification"]["type"] == "SOURCE":
@@ -147,18 +151,38 @@ class BeoPlay(object):
                     i += 1
 
     def getMusicInfo(self, data):
-        if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC" and data["notification"]["data"]["trackImage"]:
-            self.media_url = data["notification"]["data"]["trackImage"][0]["url"]
+        if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC":
+            if data["notification"]["data"]["trackImage"]:
+                self.media_url = data["notification"]["data"]["trackImage"][0]["url"]
+            else:
+                self.media_url = None
             self.media_artist = data["notification"]["data"]["artist"]
-            self.media_track = data["notification"]["data"]["name"]
             self.media_album = data["notification"]["data"]["album"]
+            self.media_track = data["notification"]["data"]["name"]
 
         if data["notification"]["type"] == "NOW_PLAYING_NET_RADIO":
-            self.media_artist = data["notification"]["data"]["name"]
             if data["notification"]["data"]["image"]:
                 self.media_url = data["notification"]["data"]["image"][0]["url"]
+            else:
+                self.media_url = None
+            self.media_artist = data["notification"]["data"]["name"]
+            self.media_album = None
             if 'liveDescription' in data["notification"]["data"]:
                 self.media_track = data["notification"]["data"]["liveDescription"]
+            else:
+                self.media_track = None
+
+        if data["notification"]["type"] == "NOW_PLAYING_LEGACY":
+            self.media_url = None
+            self.media_artist = None 
+            self.media_album = None
+            self.media_track = str(data["notification"]["data"]["trackNumber"])
+
+        if data["notification"]["type"] == "NUMBER_AND_NAME":
+            self.media_url = None
+            self.media_artist = None 
+            self.media_album = None
+            self.media_track = str(data["notification"]["data"]["number"]) + ". " + data["notification"]["data"]["name"]
     
     def getDeviceInfo(self):
         r = self._getReq("BeoDevice")
