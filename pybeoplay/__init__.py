@@ -177,6 +177,10 @@ class BeoPlay(object):
             self.media_artist = None 
             self.media_album = None
             self.media_track = str(data["notification"]["data"]["trackNumber"])
+            if data["notification"]["kind"] == "playing":
+                self.on = True
+            else:
+                self.on = False
 
         if data["notification"]["type"] == "NUMBER_AND_NAME":
             self.media_url = None
