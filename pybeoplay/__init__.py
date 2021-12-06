@@ -181,6 +181,7 @@ class BeoPlay(object):
                 self.on = True
             else:
                 self.on = False
+            self.state = data["notification"]["kind"]
 
         if data["notification"]["type"] == "NUMBER_AND_NAME":
             self.media_url = None
