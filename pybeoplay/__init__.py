@@ -106,6 +106,7 @@ class BeoPlay(object):
                 self.on = False
             else:
                 self.source = data["notification"]["data"]["primaryExperience"]["source"]["friendlyName"]
+                self.state = data["notification"]["data"]["primaryExperience"]["state"]
                 self.on = True
             self.media_url = None
             self.media_track = None
