@@ -4,6 +4,9 @@
 # Reference: https://raw.githubusercontent.com/PolyPv/BeoRemote/master/BeoRemote.txt
 # Lifted a lot of code from marton borzak's ha-beoplay
 #
+#
+# https://widdowquinn.github.io/coding/update-pypi-package/
+#
 
 import requests
 import json
