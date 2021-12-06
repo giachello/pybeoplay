@@ -100,12 +100,18 @@ class BeoPlay(object):
 
     def getSource(self, data):
         if data["notification"]["type"] == "SOURCE" and data["notification"]["data"]:
-            self.source = data["notification"]["data"]["primaryExperience"]["source"]["friendlyName"]
-            self.on = True
+            if not data["notification"]["data"]:
+                self.source = None
+                self.state = None
+                self.on = False
+            else:
+                self.source = data["notification"]["data"]["primaryExperience"]["source"]["friendlyName"]
+                self.on = True
             self.media_url = None
             self.media_track = None
             self.media_artist = None
             self.media_album = None
+        
 
     def getPrimaryExperience(self, data):
         if data["notification"]["type"] == "SOURCE":
