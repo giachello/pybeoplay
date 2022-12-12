@@ -2,7 +2,7 @@
 
 Beoplay python wrapper to integrate B&amp;O speakers/TVs to Python
 
-API wrapped to an object that can be used with to read the state and control BeoPlay devices.
+API wrapped to an object that can be used with to read the state and control BeoPlay devices. It includes both methods for blocking calls, and async calls with callbacks.
 
 Currently gets the following attributes:
 - volume
@@ -19,7 +19,7 @@ Currently gets the following attributes:
 - description (if available)
 - stand positions
 
-The following commands are avialable:
+The following commands are available:
 - set volume
 - set mute
 - play

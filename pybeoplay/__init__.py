@@ -9,42 +9,128 @@
 #
 
 import requests
+import aiohttp
+import asyncio
+from aiohttp import ClientResponse 
 import json
 import logging
+from .const import *
+
 
 LOG = logging.getLogger(__name__)
-BASE_URL = 'http://{0}:8080/{1}'
-TIMEOUT = 5.0
-CONNFAILCOUNT = 5
+
 
 class BeoPlay(object):
-    def __init__(self, host, type='default'):
+    def __init__(self, host, session : aiohttp.ClientSession = None):
         self._host = host
-        self._host_notifications = BASE_URL.format(self._host, 'BeoNotify/Notifications')
-        self._name = None
+        self._host_notifications = BASE_URL.format(self._host, BEOPLAY_URL_NOTIFICATIONS)
         self._connfail = 0
+        self._clientsession = session
+# device information
+        self._name = None
+        self._serialNumber = None
+        self._typeNumber = None
+        self._itemNumber = None
+# State and Media information
         self.on = None
         self.min_volume = None
         self.max_volume = None
         self.volume = None
         self.muted = None
-        self.source = None
-        self.sources = []
-        self.sourcesID = []
-        self.sourcesBorrowed = []
         self.state = None
         self.media_url = None
         self.media_track = None
         self.media_artist = None
         self.media_album = None
         self.primary_experience = None
-        self._serialNumber = None
-        self._typeNumber = None
-        self._itemNumber = None
-        self._standPosition = None
+# Sources
+        self.source = None
+        self.sources = []
+        self.sourcesID = []
+        self.sourcesBorrowed = []
+# Stand control        
+        self.standPosition = None
         self.standPositions = []
         self.standPositionsID = []
 
+    ###############################################################
+    # ASYNC BASED INTERACTION
+    ###############################################################
+
+    async def async_getReq(self, path):
+        try:
+            async with self._clientsession.get(BASE_URL.format(self._host, path)) as resp:
+                LOG.debug("Request Status: %s",str(resp.status))
+                if resp.status != 200:
+                    return None
+                json = await resp.json()
+                LOG.debug("Request Json: %s",json)
+                return json
+        except requests.exceptions.RequestException as err:
+            LOG.debug("Exception: %s", str(err))
+            self._connfail = CONNFAILCOUNT
+            return False
+
+    async def async_postReq(self, type, path, data):
+        try:
+            r = None
+            if type == "PUT":
+                r = self._clientsession.put(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
+            if type == "POST":
+                if data == '':
+                    r = self._clientsession.post(BASE_URL.format(self._host, path), timeout=TIMEOUT)
+                else:
+                    r = self._clientsession.post(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
+            if type == "DELETE":
+                r = self._clientsession.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
+            if r:
+                LOG.debug("Response: %s", r.content)
+                if r.status_code == 200:
+                    return True
+            return False
+        except requests.exceptions.RequestException as err:
+            LOG.debug("Exception: %s", str(err))
+            self._connfail = CONNFAILCOUNT
+            return False
+
+    async def async_notificationsTask(self, callback = None) -> bool:
+        try:
+            async with self._clientsession.get(self._host_notifications) as response:
+                data = None
+                if response.status == 200:
+                    while True:
+                        data = await response.content.readline()
+                        if data:
+                            data = data.decode("utf-8").replace("\r", "").replace("\n", "")
+                            if(len(data)>0):
+                                LOG.info("Update status: " + self._name + data)
+                                data_json = json.loads(data)
+                                self._processNotification(data_json)
+                                if callback is not None:
+                                    callback()
+                else:
+                    LOG.error(
+                        "Error %s on %s. Trying one more time",
+                        response.status,
+                        self._speaker._host_notifications,
+                    )
+                    return False   
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            LOG.info("Client connection error, marking %s as offline", self._name)
+            raise
+
+    async def async_getDeviceInfo(self):
+        r = await self.async_getReq("BeoDevice")
+        if r:
+            self._serialNumber = r["beoDevice"]["productId"]["serialNumber"]
+            self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
+            self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
+            self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
+
+    ###############################################################
+    # REQUESTS BASED INTERACTION
+    ###############################################################
 
     def _getReq(self, path):
         try:
@@ -92,14 +178,14 @@ class BeoPlay(object):
     ###############################################################
 
     def getVolume(self, data):
-        if data["notification"]["type"] == "VOLUME" and data["notification"]["data"]:
+        if data["notification"]["type"] == "VOLUME" and data["notification"]["data"] is not None:
             self.volume = int(data["notification"]["data"]["speaker"]["level"])/100
             self.min_volume = int(data["notification"]["data"]["speaker"]["range"]["minimum"])/100
             self.max_volume = int(data["notification"]["data"]["speaker"]["range"]["maximum"])/100
             self.muted = data["notification"]["data"]["speaker"]["muted"]
 
     def getSource(self, data):
-        if data["notification"]["type"] == "SOURCE" and data["notification"]["data"]:
+        if data["notification"]["type"] == "SOURCE" and data["notification"]["data"] is not None:
             if not data["notification"]["data"]:
                 self.source = None
                 self.state = None
@@ -118,47 +204,10 @@ class BeoPlay(object):
         if data["notification"]["type"] == "SOURCE":
             self.primary_experience = data["primary"]
 
-# edited to only include in Use sources    
-    def getSources(self):
-        r = self._getReq('BeoZone/Zone/Sources')
-        if r:
-            for elements in r:
-                i = 0
-                while i < len(r[elements]):
-                    if r[elements][i][1]["inUse"] == True:
-                        self.sourcesBorrowed.append(r[elements][i][1]["borrowed"])
-                        self.sources.append(r[elements][i][1]["friendlyName"])
-                        self.sourcesID.append(r[elements][i][0])
-                    i += 1
-
     def getState(self, data):
-        if data["notification"]["type"] == "PROGRESS_INFORMATION" and data["notification"]["data"]:
+        if data["notification"]["type"] == "PROGRESS_INFORMATION" and data["notification"]["data"]  is not None:
             self.state = data["notification"]["data"]["state"]
             self.on = True
-
-    def getStandby(self):
-        r = self._getReq('BeoDevice/powerManagement/standby')
-        if r:
-            if r["standby"]["powerState"] == "on":
-                self.on = True
-            else:
-                self.on = False
-
-    def getStandPosition(self):
-        r = self._getReq('BeoZone/Zone/Stand/Active')
-        if r:
-            if r["active"] is not None:
-                self._standPosition = r["active"]
-
-    def getStandPositions(self):
-        r = self._getReq('BeoZone/Zone/Stand')
-        if r:
-            for elements in r:
-                i = 0
-                while i < len(r[elements]):
-                    self.standPositions.append(r[elements][i][1]["friendlyName"])
-                    self.standPositionsID.append(r[elements][i][0])
-                    i += 1
 
     def getMusicInfo(self, data):
         if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC":
@@ -198,7 +247,61 @@ class BeoPlay(object):
             self.media_artist = None 
             self.media_album = None
             self.media_track = str(data["notification"]["data"]["number"]) + ". " + data["notification"]["data"]["name"]
-    
+
+    def _processNotification(self, data):
+        ############################################################
+        # functions are coming here that update the properties
+        ############################################################
+        # get volume
+        self.getVolume(data)
+        # get source
+        self.getSource(data)
+        # get state
+        self.getState(data)
+        # get currently playing music info
+        self.getMusicInfo(data)
+
+    ###############################################################
+    # GET ATTRIBUTES FROM THE SPEAKER - BLOCKING CALLS
+    ###############################################################
+
+# edited to only include in Use sources    
+    def getSources(self):
+        r = self._getReq('BeoZone/Zone/Sources')
+        if r:
+            for elements in r:
+                i = 0
+                while i < len(r[elements]):
+                    if r[elements][i][1]["inUse"] == True:
+                        self.sourcesBorrowed.append(r[elements][i][1]["borrowed"])
+                        self.sources.append(r[elements][i][1]["friendlyName"])
+                        self.sourcesID.append(r[elements][i][0])
+                    i += 1
+
+    def getStandby(self):
+        r = self._getReq('BeoDevice/powerManagement/standby')
+        if r:
+            if r["standby"]["powerState"] == "on":
+                self.on = True
+            else:
+                self.on = False
+
+    def getStandPosition(self):
+        r = self._getReq('BeoZone/Zone/Stand/Active')
+        if r:
+            if r["active"] is not None:
+                self._standPosition = r["active"]
+
+    def getStandPositions(self):
+        r = self._getReq('BeoZone/Zone/Stand')
+        if r:
+            for elements in r:
+                i = 0
+                while i < len(r[elements]):
+                    self.standPositions.append(r[elements][i][1]["friendlyName"])
+                    self.standPositionsID.append(r[elements][i][0])
+                    i += 1
+
     def getDeviceInfo(self):
         r = self._getReq("BeoDevice")
         if r:
@@ -214,40 +317,40 @@ class BeoPlay(object):
     def setVolume(self, volume):
         self.volume = volume
         volume = int(volume*100)
-        self._postReq('PUT','BeoZone/Zone/Sound/Volume/Speaker/Level', {'level':volume})
+        self._postReq('PUT',BEOPLAY_URL_SET_VOLUME, {'level':volume})
 
     def setMute(self, mute):
         if mute:
-            self._postReq('PUT','BeoZone/Zone/Sound/Volume/Speaker/Muted', {"muted":True})
+            self._postReq('PUT',BEOPLAY_URL_MUTE, {"muted":True})
         else:
-            self._postReq('PUT','BeoZone/Zone/Sound/Volume/Speaker/Muted', {"muted":False})
+            self._postReq('PUT',BEOPLAY_URL_MUTE, {"muted":False})
 
     def Play(self):
-        self._postReq('POST','BeoZone/Zone/Stream/Play','')
-        self._postReq('POST','BeoZone/Zone/Stream/Play/Release','')
+        self._postReq('POST',BEOPLAY_URL_PLAY,'')
+        self._postReq('POST',BEOPLAY_URL_PLAY + BEOPLAY_URL_RELEASE,'')
 
     def Pause(self):
-        self._postReq('POST','BeoZone/Zone/Stream/Pause','')
-        self._postReq('POST','BeoZone/Zone/Stream/Pause/Release','')
+        self._postReq('POST',BEOPLAY_URL_PAUSE,'')
+        self._postReq('POST',BEOPLAY_URL_PAUSE+BEOPLAY_URL_RELEASE,'')
 
     def Stop(self):
-        self._postReq('POST','BeoZone/Zone/Stream/Stop','')
-        self._postReq('POST','BeoZone/Zone/Stream/Stop/Release','')
+        self._postReq('POST',BEOPLAY_URL_STOP,'')
+        self._postReq('POST',BEOPLAY_URL_STOP+BEOPLAY_URL_RELEASE,'')
 
     def Next(self):
-        self._postReq('POST','BeoZone/Zone/Stream/Forward','')
-        self._postReq('POST','BeoZone/Zone/Stream/Forward/Release','')
+        self._postReq('POST',BEOPLAY_URL_FORWARD,'')
+        self._postReq('POST',BEOPLAY_URL_FORWARD+BEOPLAY_URL_RELEASE,'')
 
     def Prev(self):
-        self._postReq('POST','BeoZone/Zone/Stream/Backward','')
-        self._postReq('POST','BeoZone/Zone/Stream/Backward/Release','')
+        self._postReq('POST',BEOPLAY_URL_BACKWARD,'')
+        self._postReq('POST',BEOPLAY_URL_BACKWARD+BEOPLAY_URL_RELEASE,'')
 
     def Standby(self):
-        self._postReq('PUT','BeoDevice/powerManagement/standby', {"standby":{"powerState":"standby"}})
+        self._postReq('PUT',BEOPLAY_URL_STANDBY, {"standby":{"powerState":"standby"}})
         self.on = False
 
     def turnOn(self):
-        self._postReq('PUT','BeoDevice/powerManagement/standby', {"standby":{"powerState":"on"}})
+        self._postReq('PUT',BEOPLAY_URL_STANDBY, {"standby":{"powerState":"on"}})
         self.on = True
 
     def setSource(self, source):
@@ -255,7 +358,7 @@ class BeoPlay(object):
         while i < len(self.sources):
             if self.sources[i] == source:
                 chosenSource = self.sourcesID[i]
-                self._postReq('POST','BeoZone/Zone/ActiveSources', {"primaryExperience":{"source":{"id":chosenSource}}})
+                self._postReq('POST',BEOPLAY_URL_SET_SOURCE, {"primaryExperience":{"source":{"id":chosenSource}}})
             i += 1
 
     def setStandPosition(self, standPosition):
@@ -263,53 +366,20 @@ class BeoPlay(object):
         while i < len(self.standPositions):
             if self.standPositions[i] == standPosition:
                 chosenStandPosition = self.standPositionsID[i]
-                self._postReq('PUT','BeoZone/Zone/Stand/Active', {"active":chosenStandPosition})
+                self._postReq('PUT',BEOPLAY_URL_SET_STAND, {"active":chosenStandPosition})
             i += 1
 
     def joinExperience(self):
-        self._postReq('POST','BeoZone/Zone/Device/OneWayJoin','')
+        self._postReq('POST',BEOPLAY_URL_JOIN_EXPERIENCE,'')
 
     def leaveExperience(self):
-        self._postReq('DELETE','BeoZone/Zone/ActiveSources/primaryExperience', '')
+        self._postReq('DELETE',BEOPLAY_URL_LEAVE_EXPERIENCE, '')
 
     def playQueueItem(self, instantplay: bool, queueItem: dict):
         if instantplay:
-            self._postReq('POST','BeoZone/Zone/PlayQueue?instantplay',queueItem)
+            self._postReq('POST',BEOPLAY_URL_PLAYQUEUE + BEOPLAY_URL_PLAYQUEUE_INSTANT,queueItem)
         else:
-            self._postReq('POST','BeoZone/Zone/PlayQueue',queueItem)
+            self._postReq('POST',BEOPLAY_URL_PLAYQUEUE,queueItem)
 
 
-if __name__ == '__main__':
-    import sys
-    ch = logging.StreamHandler(sys.stdout)
-    logging.basicConfig(level=logging.DEBUG)
-    ch.setLevel(logging.DEBUG)
-    LOG.addHandler(ch)
-
-    if len(sys.argv) < 2:
-        quit()
-
-    gateway = BeoPlay(sys.argv[1])
-
-    gateway.getDeviceInfo()
-    print ("Serial Number: " , gateway._serialNumber)
-    print ("Type Number: ", gateway._typeNumber)
-    print ("Item Number: ",gateway._itemNumber)
-    print ("Name: ",gateway._name)
-    
-
-    gateway.getSources()
-    print (gateway.sources)
-    print (gateway.sourcesID)
-    print (gateway.sourcesBorrowed)
-    
-    gateway.getStandPositions()
-    print (gateway.standPositions)
-    print (gateway.standPositionsID)
-
-    gateway.getStandPosition()
-    print ("Stand Position: ", gateway._standPosition)
-
-    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
-    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
 

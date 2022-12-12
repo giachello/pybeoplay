@@ -7,7 +7,7 @@ def readme():
 
 PACKAGE_NAME = 'pybeoplay'
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = '0.1.1'
+VERSION = '0.2'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*', 'dist', 'ccu', 'build'])
 
@@ -32,6 +32,6 @@ setup(
             'Intended Audience :: Developers',
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3.4'
+            'Programming Language :: Python :: 3.9'
         ],
 )
