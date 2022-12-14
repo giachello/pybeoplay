@@ -11,7 +11,7 @@
 import requests
 import aiohttp
 import asyncio
-from aiohttp import ClientResponse 
+from aiohttp import ClientResponse
 import json
 import logging
 from .const import *
@@ -42,13 +42,16 @@ class BeoPlay(object):
         self.media_track = None
         self.media_artist = None
         self.media_album = None
+        self.media_genre = None
+        self.media_country = None
+        self.media_languages = None
         self.primary_experience = None
 # Sources
         self.source = None
         self.sources = []
         self.sourcesID = []
         self.sourcesBorrowed = []
-# Stand control        
+# Stand control
         self.standPosition = None
         self.standPositions = []
         self.standPositionsID = []
@@ -100,7 +103,7 @@ class BeoPlay(object):
                 if response.status == 200:
                     while True:
                         data = await response.content.readline()
-                        if data:
+                        if data and len(data)>0:
                             data = data.decode("utf-8").replace("\r", "").replace("\n", "")
                             if(len(data)>0):
                                 LOG.info("Update status: " + self._name + data)
@@ -108,17 +111,21 @@ class BeoPlay(object):
                                 self._processNotification(data_json)
                                 if callback is not None:
                                     callback()
+                        else:
+                            break
                 else:
                     LOG.error(
-                        "Error %s on %s. Trying one more time",
+                        "Error %s on %s.",
                         response.status,
                         self._speaker._host_notifications,
                     )
-                    return False   
+                    return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             LOG.info("Client connection error, marking %s as offline", self._name)
             raise
+
+        return True
 
     async def async_getDeviceInfo(self):
         r = await self.async_getReq("BeoDevice")
@@ -198,7 +205,9 @@ class BeoPlay(object):
             self.media_track = None
             self.media_artist = None
             self.media_album = None
-        
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
 
     def getPrimaryExperience(self, data):
         if data["notification"]["type"] == "SOURCE":
@@ -218,23 +227,37 @@ class BeoPlay(object):
             self.media_artist = data["notification"]["data"]["artist"]
             self.media_album = data["notification"]["data"]["album"]
             self.media_track = data["notification"]["data"]["name"]
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
 
         if data["notification"]["type"] == "NOW_PLAYING_NET_RADIO":
-            if data["notification"]["data"]["image"]:
-                self.media_url = data["notification"]["data"]["image"][0]["url"]
-            else:
-                self.media_url = None
-            self.media_artist = data["notification"]["data"]["name"]
+            self.media_url = None
+            self.media_artist = None
             self.media_album = None
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
+            if 'image' in data["notification"]["data"] and data["notification"]["data"]["image"]:
+                self.media_url = data["notification"]["data"]["image"][0]["url"]
+            if 'name' in data["notification"]["data"]:
+                self.media_artist = data["notification"]["data"]["name"]
             if 'liveDescription' in data["notification"]["data"]:
                 self.media_track = data["notification"]["data"]["liveDescription"]
-            else:
-                self.media_track = None
+            if 'genre' in data["notification"]["data"]:
+                self.media_genre = data["notification"]["data"]["genre"]
+            if 'country' in data["notification"]["data"]:
+                self.media_country = data["notification"]["data"]["country"]
+            if 'languages' in data["notification"]["data"]["languages"]:
+                self.media_languages = data["notification"]["data"]["languages"]
 
         if data["notification"]["type"] == "NOW_PLAYING_LEGACY":
             self.media_url = None
-            self.media_artist = None 
+            self.media_artist = None
             self.media_album = None
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
             self.media_track = str(data["notification"]["data"]["trackNumber"])
             if data["notification"]["kind"] == "playing":
                 self.on = True
@@ -244,28 +267,35 @@ class BeoPlay(object):
 
         if data["notification"]["type"] == "NUMBER_AND_NAME":
             self.media_url = None
-            self.media_artist = None 
+            self.media_artist = None
             self.media_album = None
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
             self.media_track = str(data["notification"]["data"]["number"]) + ". " + data["notification"]["data"]["name"]
 
     def _processNotification(self, data):
         ############################################################
         # functions are coming here that update the properties
         ############################################################
-        # get volume
-        self.getVolume(data)
-        # get source
-        self.getSource(data)
-        # get state
-        self.getState(data)
-        # get currently playing music info
-        self.getMusicInfo(data)
+        try:
+            # get volume
+            self.getVolume(data)
+            # get source
+            self.getSource(data)
+            # get state
+            self.getState(data)
+            # get currently playing music info
+            self.getMusicInfo(data)
+        except KeyError:
+            LOG.debug("Malformed notification: %s", str(data))
+
 
     ###############################################################
     # GET ATTRIBUTES FROM THE SPEAKER - BLOCKING CALLS
     ###############################################################
 
-# edited to only include in Use sources    
+# edited to only include in Use sources
     def getSources(self):
         r = self._getReq('BeoZone/Zone/Sources')
         if r:
@@ -380,6 +410,3 @@ class BeoPlay(object):
             self._postReq('POST',BEOPLAY_URL_PLAYQUEUE + BEOPLAY_URL_PLAYQUEUE_INSTANT,queueItem)
         else:
             self._postReq('POST',BEOPLAY_URL_PLAYQUEUE,queueItem)
-
-
-
