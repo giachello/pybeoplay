@@ -6,7 +6,7 @@ The API is wrapped in an object that can be used with to read the state and cont
 
 Reference information [is on this page.](https://documenter.getpostman.com/view/1053298/T1LTe4Lt)
 
-Some more information on the Notifications stream is in the (EVENTS.md)[EVENTS.md] file.
+Some more information on the Notifications stream is in the [EVENTS.md](EVENTS.md) file.
 
 Currently gets the following attributes:
 - volume
