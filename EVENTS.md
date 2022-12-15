@@ -1,5 +1,8 @@
 Turn off speaker: {"notification":{"id":373,"timestamp":"2021-12-06T01:59:31.668318","type":"SOURCE","kind":"source","data":{}}}
 
+Shutdown:
+{"notification":{"id":1939,"timestamp":"2022-12-15T00:08:22.506233","type":"SHUTDOWN","kind":"device","data":{"reason":"standby"}}}
+
 Select source A.MEM:
 {"notification":{"id":374,"timestamp":"2021-12-06T06:42:47.856877","type":"SOURCE","kind":"source","data":
 {"primary":"TP1:1790.1179011.26212907@products.bang-olufsen.com","primaryJid":"1790.1179011.26212907@products.bang-olufsen.com","primaryExperience":
@@ -9,6 +12,11 @@ Select source A.MEM:
 Select source Radio:
 {"notification":{"id":1333,"timestamp":"2022-12-12T05:49:43.574598","type":"SOURCE","kind":"source","data":{"primary":"RADIO:1790.1179011.26212907@products.bang-olufsen.com","primaryJid":"1790.1179011.26212907@products.bang-olufsen.com","primaryExperience":{"source":{"id":"RADIO:1790.1179011.26212907@products.bang-olufsen.com","friendlyName":"Radio","sourceType":{"type":"RADIO"},"category":"RADIO","inUse":true,"profile":"","linkable":true,"recommendedIrMapping":[{"format":0,"unit":0,"command":129},{"format":11,"unit":0,"command":129}],"contentProtection":{"schemeList":["NONE"]},"embeddedBinary":{"schemeList":[]},"product":{"jid":"1790.1179011.26212907@products.bang-olufsen.com"}},"listener":["1790.1179011.26212907@products.bang-olufsen.com"],"lastUsed":"2022-12-12T05:49:43.567938","state":"play"}}}}
 
+Select source Home Media:
+{"notification":{"timestamp":"2022-12-15T00:05:28.682725","type":"SOURCE","kind":"source","data":{"primary":"homemedia:8643.1860168.25481957@products.bang-olufsen.com","primaryJid":"8643.1860168.25481957@products.bang-olufsen.com","primaryExperience":{"source":{"id":"homemedia:8643.1860168.25481957@products.bang-olufsen.com","friendlyName":"HOMEMEDIA","sourceType":{"type":"HOMEMEDIA"},"category":"MEDIA","inUse":true,"signalSensed":true,"profile":"","linkable":true,"recommendedIrMapping":[{"format":0,"unit":0,"command":132},{"format":11,"unit":0,"command":132}],"contentProtection":{"schemeList":["DECIMATE"]},"embeddedBinary":{"schemeList":[]},"product":{"jid":"8643.1860168.25481957@products.bang-olufsen.com","friendlyName":"BeoVision Avant 55"}},"listener":["8643.1860168.25481957@products.bang-olufsen.com"],"lastUsed":"2022-12-15T00:00:19.594303","state":"play"}}}}
+
+Changed Home Media experience:
+{"notification":{"id":1936,"timestamp":"2022-12-15T00:08:10.764293","type":"SOURCE_EXPERIENCE_CHANGED","kind":"source","data":{"primaryExperience":{"source":{"id":"homemedia:8643.1860168.25481957@products.bang-olufsen.com","friendlyName":"HOMEMEDIA","sourceType":{"type":"HOMEMEDIA"},"category":"MEDIA","inUse":true,"signalSensed":true,"profile":"","linkable":true,"recommendedIrMapping":[{"format":0,"unit":0,"command":132},{"format":11,"unit":0,"command":132}],"contentProtection":{"schemeList":["DECIMATE"]},"embeddedBinary":{"schemeList":[]},"product":{"jid":"8643.1860168.25481957@products.bang-olufsen.com","friendlyName":"BeoVision Avant 55"}},"listener":[],"lastUsed":"2022-12-15T00:06:15.465235","state":"play"}}}}
 
 Radio track number change:
 {"notification":{"id":1334,"timestamp":"2022-12-12T05:49:44.260711","type":"NOW_PLAYING_LEGACY","kind":"playing","data":{"trackNumber":1}}}
