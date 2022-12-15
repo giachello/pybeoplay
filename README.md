@@ -1,8 +1,12 @@
 # pybeoplay 
 
-Beoplay python wrapper to integrate B&amp;O speakers/TVs to Python
+Beoplay Python wrapper to integrate B&amp;O speakers/TVs to Python. This library provides both blocking calls through the requests module and async using asyncio aiohttp calls.
 
-API wrapped to an object that can be used with to read the state and control BeoPlay devices. It includes both methods for blocking calls, and async calls with callbacks.
+The API is wrapped in an object that can be used with to read the state and control BeoPlay devices. It includes both methods for blocking calls, and async calls with callbacks.
+
+Reference information [is on this page.](https://documenter.getpostman.com/view/1053298/T1LTe4Lt)
+
+Some more information on the Notifications stream is in the (EVENTS.md)[EVENTS.md] file.
 
 Currently gets the following attributes:
 - volume
