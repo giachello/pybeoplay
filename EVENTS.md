@@ -16,4 +16,13 @@ Radio track number change:
 Volume change:
 {"notification":{"id":1348,"timestamp":"2022-12-12T05:50:22.098292","type":"VOLUME","kind":"renderer","data":{"speaker":{"level":32,"muted":false,"range":{"minimum":0,"maximum":90}}}}}
 
+Home Media Photo view:
+{"notification":{"id":1925,"timestamp":"2022-12-14T23:34:27.904691","type":"NOW_PLAYING_STORED_PHOTO","kind":"playing","data":{"name":"io-ag"}}}
 
+Home Media Video view:
+{"notification":{"id":1928,"timestamp":"2022-12-14T23:41:17.710314","type":"NOW_PLAYING_STORED_VIDEO","kind":"playing","data":{"name":"Mov08c-1"}}}
+
+{"notification":{"id":1931,"timestamp":"2022-12-15T00:00:19.730260","type":"NOW_PLAYING_STORED_MUSIC","kind":"playing","data":{"name":"808 State - Pacific(Grooverider Remix)","duration":2077252342,"trackImage":[],"artist":"808 State","artistImage":[],"album":"808_State","albumImage":[],"genre":""}}}
+
+Stop a video from playing:
+{"notification":{"id":1929,"timestamp":"2022-12-14T23:41:21.593635","type":"PROGRESS_INFORMATION","kind":"playing","data":{"state":"stop"}}}
