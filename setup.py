@@ -22,6 +22,7 @@ setup(
         author='Giovanni Iachello',
         author_email='giovanni.iachello@gmail.com',
         description='BeoPlay API for Python',
+        readme="README.md",
         packages=PACKAGES,
         include_package_data=True,
         zip_safe=False,
