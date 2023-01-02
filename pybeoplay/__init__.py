@@ -83,7 +83,7 @@ class BeoPlay(object):
             self._connfail = CONNFAILCOUNT
             return False
 
-    async def async_postReq(self, type, path, data):
+    async def async_postReq(self, type, path, jsondata : dict = None):
         """ Non blocking POST call to the speaker, with a given path and JSON data.
         type: PUT POST or DELETE
         path: the path of the request
@@ -92,32 +92,36 @@ class BeoPlay(object):
         if self._clientsession is None:
             LOG.error("Attempt asyncio with no ClientSession")
         try:
-            r = None
             if type == "PUT":
-                r = self._clientsession.put(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
-            if type == "POST":
-                if data == '':
-                    r = self._clientsession.post(BASE_URL.format(self._host, path), timeout=TIMEOUT)
-                else:
-                    r = self._clientsession.post(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
-            if type == "DELETE":
-                r = self._clientsession.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
-            if r:
-                LOG.debug("Response: %s", r.content)
-                if r.status_code == 200:
-                    return True
-            return False
+                async with self._clientsession.put(BASE_URL.format(self._host, path), json=jsondata, timeout=TIMEOUT) as resp:
+                    LOG.debug("Status: %s", resp.status)
+                    if resp.status != 200:
+                        return False
+            elif type == "POST":
+                async with self._clientsession.post(BASE_URL.format(self._host, path), json=jsondata, timeout=TIMEOUT) as resp:
+                    LOG.debug("Status: %s", resp.status)
+                    if resp.status != 200:
+                        return False
+            elif type == "DELETE":
+                async with self._clientsession.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT) as resp:
+                    LOG.debug("Status: %s", resp.status)
+                    if resp.status != 200:
+                        return False
+
+            else:
+                return False
         except requests.exceptions.RequestException as err:
             LOG.debug("Exception: %s", str(err))
             self._connfail = CONNFAILCOUNT
             return False
+        return True
 
     async def async_notificationsTask(self, callback = None) -> bool:
         """ 
         Async notifications taks that can be used to keep track of the speaker actions.
         B&O speakers disconnect after 5 minutes of inactivity, so restart the task if this exits.
         This function automatically updates the internal state of the BeoPlay object.
-        
+
         callback: a function to be called to use the notification (E.g. to update a UI...)
         """
         if self._clientsession is None:
@@ -345,7 +349,7 @@ class BeoPlay(object):
             self._connfail = CONNFAILCOUNT
             return None
 
-    def _postReq(self, type, path, data):
+    def _postReq(self, type, path, data = ''):
         try:
             r = None
             if self._connfail:
@@ -355,7 +359,7 @@ class BeoPlay(object):
             if type == "PUT":
                 r = requests.put(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)
             if type == "POST":
-                if data == '':
+                if data is None or data == '':
                     r = requests.post(BASE_URL.format(self._host, path), timeout=TIMEOUT)
                 else:
                     r = requests.post(BASE_URL.format(self._host, path), data=json.dumps(data), timeout=TIMEOUT)

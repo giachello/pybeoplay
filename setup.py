@@ -7,11 +7,14 @@ def readme():
 
 PACKAGE_NAME = 'pybeoplay'
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = '0.3'
+VERSION = '1.0.0'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*', 'dist', 'ccu', 'build'])
 
 REQUIRES = []
+
+long_description = readme()
+
 
 setup(
         name=PACKAGE_NAME,
@@ -22,6 +25,8 @@ setup(
         author='Giovanni Iachello',
         author_email='giovanni.iachello@gmail.com',
         description='BeoPlay API for Python',
+        long_description=long_description,
+        long_description_content_type='text/markdown',
         readme="README.md",
         packages=PACKAGES,
         include_package_data=True,

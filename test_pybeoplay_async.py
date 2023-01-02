@@ -5,18 +5,24 @@ import aiohttp
 
 LOG = logging.getLogger(__name__)
 
+async def test_volume(gateway : BeoPlay):
+    await asyncio.sleep(4)
+    await gateway.async_set_volume(0.40)
+
 
 async def main(host):
     timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout = timeout) as session:
         gateway = BeoPlay(host, session)
 
-        await gateway.async_getDeviceInfo()
+        await gateway.async_get_device_info()
         print ("Serial Number: " , gateway._serialNumber)
         print ("Type Number: ", gateway._typeNumber)
         print ("Item Number: ",gateway._itemNumber)
         print ("Name: ",gateway._name)
         print ("Standby: ", gateway.on)
+
+        asyncio.create_task(test_volume(gateway))
 
         def callback():
             print ("On State: " , gateway.on)
@@ -52,3 +58,5 @@ if __name__ == '__main__':
         quit()
 
     asyncio.run(main(sys.argv[1]))
+
+
