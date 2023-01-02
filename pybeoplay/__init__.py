@@ -139,7 +139,7 @@ class BeoPlay(object):
                                 data_json = json.loads(data)
                                 self._processNotification(data_json)
                                 if callback is not None:
-                                    callback()
+                                    callback(data_json["notification"])
                         else:
                             break
                 else:
