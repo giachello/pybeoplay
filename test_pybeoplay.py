@@ -16,10 +16,10 @@ if __name__ == '__main__':
     gateway = BeoPlay(sys.argv[1])
 
     gateway.getDeviceInfo()
-    print ("Serial Number: " , gateway._serialNumber)
-    print ("Type Number: ", gateway._typeNumber)
-    print ("Item Number: ",gateway._itemNumber)
-    print ("Name: ",gateway._name)
+    print ("Serial Number: " , gateway.serialNumber)
+    print ("Type Number: ", gateway.typeNumber)
+    print ("Item Number: ",gateway.itemNumber)
+    print ("Name: ",gateway.name)
     print ("Standby: ", gateway.on)
     
     gateway.getSources()
@@ -38,5 +38,5 @@ if __name__ == '__main__':
     print ("On State: ", gateway.on)
 
 
-    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
-    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
+#    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
+#    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})

@@ -62,6 +62,26 @@ class BeoPlay(object):
         self.standPositions = []
         self.standPositionsID = []
 
+    @property
+    def name(self):
+        """Return the device name."""
+        return self._name
+
+    @property
+    def serialNumber(self):
+        """Return the device serial number."""
+        return self._serialNumber
+
+    @property
+    def itemNumber(self):
+        """Return the device serial number."""
+        return self._itemNumber
+
+    @property
+    def typeNumber(self):
+        """Return the device serial number."""
+        return self._typeNumber
+
     ###############################################################
     # ASYNC BASED NETWORK CALLS
     ###############################################################
@@ -135,7 +155,7 @@ class BeoPlay(object):
                         if data and len(data)>0:
                             data = data.decode("utf-8").replace("\r", "").replace("\n", "")
                             if(len(data)>0):
-                                LOG.info("Update status: " + self._name + data)
+                                LOG.info("Update status: %s %s" % (self._name , data))
                                 data_json = json.loads(data)
                                 self._processNotification(data_json)
                                 if callback is not None:
@@ -150,8 +170,8 @@ class BeoPlay(object):
                     )
                     return False
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            LOG.info("Client connection error, marking %s as offline", self._name)
+        except (asyncio.TimeoutError, aiohttp.ClientError) as _e:
+            LOG.info("Client error %s on %s" % ( str(_e), self._name))
             raise
 
         return True
@@ -241,24 +261,25 @@ class BeoPlay(object):
             await self.async_postReq('PUT',BEOPLAY_URL_MUTE, {"muted":False})
 
     async def async_play(self):
-        await self.async_postReq('POST',BEOPLAY_URL_PLAY,'')
-        await self.async_postReq('POST',BEOPLAY_URL_PLAY + BEOPLAY_URL_RELEASE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_PLAY, {})
 
     async def async_pause(self):
-        await self.async_postReq('POST',BEOPLAY_URL_PAUSE,'')
-        await self.async_postReq('POST',BEOPLAY_URL_PAUSE+BEOPLAY_URL_RELEASE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_PAUSE, {})
 
     async def async_stop(self):
-        await self.async_postReq('POST',BEOPLAY_URL_STOP,'')
-        await self.async_postReq('POST',BEOPLAY_URL_STOP+BEOPLAY_URL_RELEASE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_STOP, {})
 
     async def async_next(self):
-        await self.async_postReq('POST',BEOPLAY_URL_FORWARD,'')
-        await self.async_postReq('POST',BEOPLAY_URL_FORWARD+BEOPLAY_URL_RELEASE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_STEPUP, {})
 
     async def async_prev(self):
-        await self.async_postReq('POST',BEOPLAY_URL_BACKWARD,'')
-        await self.async_postReq('POST',BEOPLAY_URL_BACKWARD+BEOPLAY_URL_RELEASE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_STEPDOWN, {})
+
+    async def async_shuffle(self):
+        await self.async_postReq('POST',BEOPLAY_URL_SHUFFLE, {})
+
+    async def async_repeat(self):
+        await self.async_postReq('POST',BEOPLAY_URL_REPEAT, {})
 
     async def async_standby(self):
         await self.async_postReq('PUT',BEOPLAY_URL_STANDBY, {"standby":{"powerState":"standby"}})
@@ -285,10 +306,10 @@ class BeoPlay(object):
             i += 1
 
     async def async_join_experience(self):
-        await self.async_postReq('POST',BEOPLAY_URL_JOIN_EXPERIENCE,'')
+        await self.async_postReq('POST',BEOPLAY_URL_JOIN_EXPERIENCE)
 
     async def async_leave_experience(self):
-        await self.async_postReq('DELETE',BEOPLAY_URL_LEAVE_EXPERIENCE, '')
+        await self.async_postReq('DELETE',BEOPLAY_URL_LEAVE_EXPERIENCE)
 
     async def async_play_queue_item(self, instantplay: bool, queueItem: dict):
         """ Play a queue item, from Deezer, TuneIn or DLNA. 
@@ -442,23 +463,18 @@ class BeoPlay(object):
 
     def Play(self):
         self._postReq('POST',BEOPLAY_URL_PLAY,'')
-        self._postReq('POST',BEOPLAY_URL_PLAY + BEOPLAY_URL_RELEASE,'')
 
     def Pause(self):
         self._postReq('POST',BEOPLAY_URL_PAUSE,'')
-        self._postReq('POST',BEOPLAY_URL_PAUSE+BEOPLAY_URL_RELEASE,'')
 
     def Stop(self):
         self._postReq('POST',BEOPLAY_URL_STOP,'')
-        self._postReq('POST',BEOPLAY_URL_STOP+BEOPLAY_URL_RELEASE,'')
 
     def Next(self):
-        self._postReq('POST',BEOPLAY_URL_FORWARD,'')
-        self._postReq('POST',BEOPLAY_URL_FORWARD+BEOPLAY_URL_RELEASE,'')
+        self._postReq('POST',BEOPLAY_URL_STEPUP,'')
 
     def Prev(self):
-        self._postReq('POST',BEOPLAY_URL_BACKWARD,'')
-        self._postReq('POST',BEOPLAY_URL_BACKWARD+BEOPLAY_URL_RELEASE,'')
+        self._postReq('POST',BEOPLAY_URL_STEPDOWN,'')
 
     def Standby(self):
         self._postReq('PUT',BEOPLAY_URL_STANDBY, {"standby":{"powerState":"standby"}})
@@ -500,14 +516,14 @@ class BeoPlay(object):
     # PARSE NOTIFICATIONS MESSAGES
     ###############################################################
 
-    def getVolume(self, data):
+    def _processVolume(self, data):
         if data["notification"]["type"] == "VOLUME" and data["notification"]["data"] is not None:
             self.volume = int(data["notification"]["data"]["speaker"]["level"])/100
             self.min_volume = int(data["notification"]["data"]["speaker"]["range"]["minimum"])/100
             self.max_volume = int(data["notification"]["data"]["speaker"]["range"]["maximum"])/100
             self.muted = data["notification"]["data"]["speaker"]["muted"]
 
-    def getSource(self, data):
+    def _processSource(self, data):
         if data["notification"]["type"] == "SOURCE" and data["notification"]["data"] is not None:
             if not data["notification"]["data"]:
                 self.source = None
@@ -525,16 +541,16 @@ class BeoPlay(object):
             self.media_country = None
             self.media_languages = None
 
-    def getPrimaryExperience(self, data):
+    def _processPrimaryExperience(self, data):
         if data["notification"]["type"] == "SOURCE":
             self.primary_experience = data["primary"]
 
-    def getState(self, data):
+    def _processState(self, data):
         if data["notification"]["type"] == "PROGRESS_INFORMATION" and data["notification"]["data"]  is not None:
             self.state = data["notification"]["data"]["state"]
             self.on = True
 
-    def getMusicInfo(self, data):
+    def _processMusicInfo(self, data):
         if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC":
             if data["notification"]["data"]["trackImage"]:
                 self.media_url = data["notification"]["data"]["trackImage"][0]["url"]
@@ -556,6 +572,7 @@ class BeoPlay(object):
             self.media_languages = None
             if 'image' in data["notification"]["data"] and data["notification"]["data"]["image"]:
                 self.media_url = data["notification"]["data"]["image"][0]["url"]
+                self.media_url = self.media_url.replace(".:8080/",":8080/") # some B&O devices provide a hostname with trailing '.' which doesn't resolve
             if 'name' in data["notification"]["data"]:
                 self.media_artist = data["notification"]["data"]["name"]
             if 'liveDescription' in data["notification"]["data"]:
@@ -594,13 +611,13 @@ class BeoPlay(object):
         """ Cumulative process all the potential notification information. """
         try:
             # get volume
-            self.getVolume(data)
+            self._processVolume(data)
             # get source
-            self.getSource(data)
+            self._processSource(data)
             # get state
-            self.getState(data)
+            self._processState(data)
             # get currently playing music info
-            self.getMusicInfo(data)
+            self._processMusicInfo(data)
         except KeyError:
             LOG.debug("Malformed notification: %s", str(data))
 
