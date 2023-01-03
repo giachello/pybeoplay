@@ -8,6 +8,17 @@ LOG = logging.getLogger(__name__)
 async def test_volume(gateway : BeoPlay):
     await asyncio.sleep(4)
     await gateway.async_set_volume(0.40)
+    await asyncio.sleep(4)
+    await gateway.async_next()
+
+async def get_status(gateway : BeoPlay):
+    while True:
+        try:
+            await asyncio.sleep(10)
+            _on : bool = await gateway.async_get_standby()
+            print("Status is on: ", str(_on))
+        except Exception as e:
+            LOG.info("Exception %s", str(e))
 
 
 async def main(host):
@@ -16,15 +27,16 @@ async def main(host):
         gateway = BeoPlay(host, session)
 
         await gateway.async_get_device_info()
-        print ("Serial Number: " , gateway._serialNumber)
-        print ("Type Number: ", gateway._typeNumber)
-        print ("Item Number: ",gateway._itemNumber)
-        print ("Name: ",gateway._name)
+        print ("Serial Number: " , gateway.serialNumber)
+        print ("Type Number: ", gateway.typeNumber)
+        print ("Item Number: ",gateway.itemNumber)
+        print ("Name: ",gateway.name)
         print ("Standby: ", gateway.on)
 
         asyncio.create_task(test_volume(gateway))
+        asyncio.create_task(get_status(gateway))
 
-        def callback():
+        def callback(json_data):
             print ("On State: " , gateway.on)
             print ("Source: ", gateway.source)
             print ("Min Volume: " , gateway.min_volume)
