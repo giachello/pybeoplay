@@ -1,8 +1,8 @@
-# pybeoplay 
+# Bang & Olufsen BeoPlay devices Python integration module
 
-Beoplay Python wrapper to integrate B&amp;O speakers/TVs to Python. This library provides both blocking calls through the requests module and async using asyncio aiohttp calls.
+Beoplay Python wrapper to integrate B&amp;O speakers/TVs to Python that use the BeoPlay API. BeoPlay API is the 2nd generation B&O API, after [Masterlink Gateway](https://github.com/giachello/mlgw) and before [Mozart](https://github.com/bang-olufsen/mozart-open-api). It is supported by devices built from the early 2000s to the late 2010s, including BeoVision Avant TV, BeoLab speakers and the NL/ML Converter.
 
-The API is wrapped in an object that can be used with to read the state and control BeoPlay devices. It includes both methods for blocking calls, and async calls with callbacks.
+The API is wrapped in an object that can be used  to read the state and control BeoPlay devices. It includes both methods for blocking calls, and async calls with callbacks using aiohttp.
 
 Reference information [is on this page.](https://documenter.getpostman.com/view/1053298/T1LTe4Lt)
 
@@ -32,7 +32,6 @@ The following commands are available:
 - next
 - previous
 - standby
-- turn on
 - set source
 - join experience
 - leave experience
