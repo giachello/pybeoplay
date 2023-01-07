@@ -300,7 +300,7 @@ class BeoPlay(object):
     async def async_turn_on(self):
         """Turn on the device. There is no such thing as an "on" command on B&O 
         equipment, so just select the first source, if it exists."""
-        if len(self.sources>0):
+        if len(self.sources)>0:
             await self.async_set_source(self.sources[0])
             self.on = True
 
@@ -517,7 +517,7 @@ class BeoPlay(object):
     def turnOn(self):
         """Turn on the device. There is no such thing as an "on" command on B&O 
         equipment, so just select the first source, if it exists."""
-        if len(self.sources>0):
+        if len(self.sources)>0:
             self.setSource(self.sources[0])
             self.on = True
 
