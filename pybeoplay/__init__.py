@@ -515,8 +515,11 @@ class BeoPlay(object):
         self.on = False
 
     def turnOn(self):
-        self._postReq("PUT", BEOPLAY_URL_STANDBY, {"standby": {"powerState": "on"}})
-        self.on = True
+        """Turn on the device. There is no such thing as an "on" command on B&O 
+        equipment, so just select the first source, if it exists."""
+        if len(self.sources>0):
+            self.setSource(self.sources[0])
+            self.on = True
 
     def setSource(self, source):
         i = 0
