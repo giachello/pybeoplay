@@ -603,12 +603,14 @@ class BeoPlay(object):
 #            self.primary_experience = data["primary"]
 
     def _processState(self, data):
+        """Progress information provides info about the current state of play. 
+        It is only reliable if the device is on. """
         if (
             data["notification"]["type"] == "PROGRESS_INFORMATION"
             and data["notification"]["data"] is not None
         ):
             self.state = data["notification"]["data"]["state"]
-            self.on = True
+#            self.on = True
 
     def _processMusicInfo(self, data):
         if data["notification"]["type"] == "NOW_PLAYING_STORED_MUSIC":
@@ -619,11 +621,20 @@ class BeoPlay(object):
             self.media_artist = data["notification"]["data"]["artist"]
             self.media_album = data["notification"]["data"]["album"]
             self.media_track = data["notification"]["data"]["name"]
+            self.media_genre = data["notification"]["data"]["genre"]
+            self.media_country = None
+            self.media_languages = None
+
+        elif data["notification"]["type"] == "NOW_PLAYING_STORED_VIDEO":     
+            self.media_url = None
+            self.media_artist = None
+            self.media_album = None
+            self.media_track = data["notification"]["data"]["name"]
             self.media_genre = None
             self.media_country = None
             self.media_languages = None
 
-        if data["notification"]["type"] == "NOW_PLAYING_NET_RADIO":
+        elif data["notification"]["type"] == "NOW_PLAYING_NET_RADIO":
             self.media_url = None
             self.media_artist = None
             self.media_album = None
@@ -649,7 +660,7 @@ class BeoPlay(object):
             if "languages" in data["notification"]["data"]["languages"]:
                 self.media_languages = data["notification"]["data"]["languages"]
 
-        if data["notification"]["type"] == "NOW_PLAYING_LEGACY":
+        elif data["notification"]["type"] == "NOW_PLAYING_LEGACY":
             self.media_url = None
             self.media_artist = None
             self.media_album = None
@@ -663,7 +674,16 @@ class BeoPlay(object):
                 self.on = False
             self.state = data["notification"]["kind"]
 
-        if data["notification"]["type"] == "NUMBER_AND_NAME":
+        elif data["notification"]["type"] == "NOW_PLAYING_ENDED":
+            self.media_url = None
+            self.media_artist = None
+            self.media_album = None
+            self.media_genre = None
+            self.media_country = None
+            self.media_languages = None
+            self.media_track = None
+
+        elif data["notification"]["type"] == "NUMBER_AND_NAME":
             self.media_url = None
             self.media_artist = None
             self.media_album = None
