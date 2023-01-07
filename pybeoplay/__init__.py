@@ -598,9 +598,9 @@ class BeoPlay(object):
             self.media_country = None
             self.media_languages = None
 
-    def _processPrimaryExperience(self, data):
-        if data["notification"]["type"] == "SOURCE":
-            self.primary_experience = data["primary"]
+#    def _processPrimaryExperience(self, data):
+#        if data["notification"]["type"] == "SOURCE":
+#            self.primary_experience = data["primary"]
 
     def _processState(self, data):
         if (
