@@ -39,6 +39,9 @@ class BeoPlay(object):
         self._serialNumber = None
         self._typeNumber = None
         self._itemNumber = None
+        self._typeName = None
+        self._softwareVersion = None
+        self._hardwareVersion = None
         # State and Media information
         self.on = None
         self.min_volume = None
@@ -81,8 +84,24 @@ class BeoPlay(object):
 
     @property
     def typeNumber(self):
-        """Return the device serial number."""
+        """Return the device type model number."""
         return self._typeNumber
+
+    @property
+    def typeName(self):
+        """Return the device type name."""
+        return self._typeName
+
+    @property
+    def softwareVersion(self):
+        """Return the device serial number."""
+        return self._softwareVersion
+
+    @property
+    def hardwareVersion(self):
+        """Return the device serial number."""
+        return self._hardwareVersion
+
 
     ###############################################################
     # ASYNC BASED NETWORK CALLS
@@ -252,6 +271,9 @@ class BeoPlay(object):
             self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
             self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
             self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
+            self._softwareVersion = r["beoDevice"]["software"]["version"]
+            self._hardwareVersion = r["beoDevice"]["hardware"]["version"]
+            self._typeName = r["beoDevice"]["productId"]["productType"]
             return self._serialNumber, self._name, self._typeNumber, self._itemNumber
         return
 
@@ -477,7 +499,9 @@ class BeoPlay(object):
             self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
             self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
             self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
-
+            self._softwareVersion = r["beoDevice"]["software"]["version"]
+            self._hardwareVersion = r["beoDevice"]["hardware"]["version"]
+            self._typeName = r["beoDevice"]["productId"]["productType"]
     ###############################################################
     # COMMANDS - Blocking
     ###############################################################

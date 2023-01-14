@@ -19,6 +19,9 @@ if __name__ == '__main__':
     print ("Serial Number: " , gateway.serialNumber)
     print ("Type Number: ", gateway.typeNumber)
     print ("Item Number: ",gateway.itemNumber)
+    print ("Type Name: ",gateway.typeName)
+    print ("SW: ",gateway.softwareVersion)
+    print ("HW: ",gateway.hardwareVersion)
     print ("Name: ",gateway.name)
     print ("Standby: ", gateway.on)
     
