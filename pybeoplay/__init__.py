@@ -102,6 +102,10 @@ class BeoPlay(object):
         """Return the device serial number."""
         return self._hardwareVersion
 
+    @property
+    def remote_commands(self):
+        """Get the list of available remote commands"""
+        return BEOPLAY_REMOTE_COMMANDS
 
     ###############################################################
     # ASYNC BASED NETWORK CALLS
@@ -396,6 +400,31 @@ class BeoPlay(object):
         else:
             await self.async_postReq("POST", BEOPLAY_URL_PLAYQUEUE, queueItem)
 
+    async def async_remote_command(self, command : str, toBeReleased :bool = False):
+        """
+        Send a remote command to the device. Command needs to be one of:  
+
+        Cursor/Select, Cursor/Up, Cursor/Down, Cursor/Left, Cursor/Right, Cursor/Exit, Cursor/Back, Cursor/PageUp, Cursor/PageDown, Cursor/Clear, 
+        Stream/Play, Stream/Stop, Stream/Pause, Stream/Wind, Stream/Rewind, Stream/Forward, Stream/Backward, 
+        List/StepUp, List/StepDown, List/PreviousElement, List/Shuffle, List/Repeat, 
+        Menu/Root, Menu/Option, Menu/Setup, Menu/Contents, Menu/Favorites, Menu/ElectronicProgramGuide, Menu/VideoOnDemand, Menu/Text, Menu/HbbTV,Menu/HomeControl, 
+        Device/Information, Device/Eject, Device/TogglePower, Device/Languages, Device/Subtitles, Device/OneWayJoin, Device/Mots, 
+        Record/Record, 
+        Generic/Blue, Generic/Red, Generic/Green, Generic/Yellow.
+        
+        toBeReleased: true if this is a button press that is held. Needs to be completed by calling async_remote_release.
+
+        """
+        if (command not in BEOPLAY_REMOTE_COMMANDS):
+            return
+        await self.async_postReq("POST", BEOPLAY_REMOTE_PREFIX + command, {"toBeReleased": toBeReleased})
+
+    async def async_remote_release(self, command : str):
+        if (command not in BEOPLAY_REMOTE_COMMANDS):
+            return
+        await self.async_postReq("POST", BEOPLAY_REMOTE_PREFIX + command + BEOPLAY_URL_RELEASE, {})
+
+
     ###############################################################
     # REQUESTS (BLOCKING) NETWORK CALLS
     ###############################################################
@@ -425,10 +454,10 @@ class BeoPlay(object):
             if type == "PUT":
                 r = requests.put(
                     BASE_URL.format(self._host, path),
-                    data=json.dumps(data),
+                    json=data,
                     timeout=TIMEOUT,
                 )
-            if type == "POST":
+            elif type == "POST":
                 if data is None or data == "":
                     r = requests.post(
                         BASE_URL.format(self._host, path), timeout=TIMEOUT
@@ -436,10 +465,10 @@ class BeoPlay(object):
                 else:
                     r = requests.post(
                         BASE_URL.format(self._host, path),
-                        data=json.dumps(data),
+                        json=data,
                         timeout=TIMEOUT,
                     )
-            if type == "DELETE":
+            elif type == "DELETE":
                 r = requests.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
             if r:
                 LOG.debug("Response: %s", r.content)

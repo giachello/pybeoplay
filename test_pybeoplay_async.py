@@ -6,10 +6,10 @@ import aiohttp
 LOG = logging.getLogger(__name__)
 
 async def test_volume(gateway : BeoPlay):
-    await asyncio.sleep(4)
+    await asyncio.sleep(10)
     await gateway.async_set_volume(0.40)
     await asyncio.sleep(4)
-    await gateway.async_next()
+    await gateway.async_set_volume(0.37)
 
 async def get_status(gateway : BeoPlay):
     while True:
@@ -20,6 +20,12 @@ async def get_status(gateway : BeoPlay):
         except Exception as e:
             LOG.info("Exception %s", str(e))
 
+async def test_remote(gateway : BeoPlay):
+    await gateway.async_turn_on()
+    await asyncio.sleep(10)
+    await gateway.async_remote_command('Cursor/Down')
+    await asyncio.sleep(4)
+    await gateway.async_remote_command('Stream/Play')
 
 async def main(host):
     timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
@@ -33,6 +39,10 @@ async def main(host):
         print ("Name: ",gateway.name)
         print ("Standby: ", gateway.on)
 
+        sources = await gateway.async_get_sources()
+        print ("Sources: ", sources)
+
+        asyncio.create_task(test_remote(gateway))
         asyncio.create_task(test_volume(gateway))
         asyncio.create_task(get_status(gateway))
 

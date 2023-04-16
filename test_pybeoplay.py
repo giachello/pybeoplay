@@ -43,3 +43,13 @@ if __name__ == '__main__':
 
 #    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
 #    gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
+    gateway.playQueueItem(True,{
+        "playQueueItem": 
+            {
+                "behaviour": "impulsive",
+                "track": {
+                    "dlna": {
+                        "url": "http://192.168.1.217:50002/v/NDLNA/785.mp4"
+                    }}}}
+    )
+    
