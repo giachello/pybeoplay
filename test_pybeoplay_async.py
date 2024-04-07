@@ -14,7 +14,7 @@ async def test_volume(gateway : BeoPlay):
 async def get_status(gateway : BeoPlay):
     while True:
         try:
-            await asyncio.sleep(10)
+            await asyncio.sleep(15)
             _on : bool = await gateway.async_get_standby()
             print("Status is on: ", str(_on))
         except Exception as e:
@@ -22,10 +22,18 @@ async def get_status(gateway : BeoPlay):
 
 async def test_remote(gateway : BeoPlay):
     await gateway.async_turn_on()
-    await asyncio.sleep(10)
+    await asyncio.sleep(5)
     await gateway.async_remote_command('Cursor/Down')
     await asyncio.sleep(4)
     await gateway.async_remote_command('Stream/Play')
+
+async def test_digits(gateway : BeoPlay):
+    await asyncio.sleep(10)
+    await gateway.async_digits('1')
+    await asyncio.sleep(2)
+    await gateway.async_digits('0')
+    await asyncio.sleep(2)
+    await gateway.async_digits('99')
 
 async def main(host):
     timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
@@ -43,6 +51,7 @@ async def main(host):
         print ("Sources: ", sources)
 
         asyncio.create_task(test_remote(gateway))
+        asyncio.create_task(test_digits(gateway))
         asyncio.create_task(test_volume(gateway))
         asyncio.create_task(get_status(gateway))
 

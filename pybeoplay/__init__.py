@@ -107,6 +107,11 @@ class BeoPlay(object):
         """Get the list of available remote commands"""
         return BEOPLAY_REMOTE_COMMANDS
 
+    @property
+    def digits(self):
+        """Get the list of available digits"""
+        return BEOPLAY_DIGITS
+
     ###############################################################
     # ASYNC BASED NETWORK CALLS
     ###############################################################
@@ -305,11 +310,17 @@ class BeoPlay(object):
     async def async_stop(self):
         await self.async_postReq("POST", BEOPLAY_URL_STOP, {})
 
-    async def async_next(self):
+    async def async_stepup(self):
         await self.async_postReq("POST", BEOPLAY_URL_STEPUP, {})
 
-    async def async_prev(self):
+    async def async_stepdown(self):
         await self.async_postReq("POST", BEOPLAY_URL_STEPDOWN, {})
+
+    async def async_forward(self):
+        await self.async_postReq("POST", BEOPLAY_URL_FORWARD, {})
+
+    async def async_backward(self):
+        await self.async_postReq("POST", BEOPLAY_URL_BACKWARD, {})
 
     async def async_shuffle(self):
         await self.async_postReq("POST", BEOPLAY_URL_SHUFFLE, {})
@@ -423,6 +434,15 @@ class BeoPlay(object):
         if (command not in BEOPLAY_REMOTE_COMMANDS):
             return
         await self.async_postReq("POST", BEOPLAY_REMOTE_PREFIX + command + BEOPLAY_URL_RELEASE, {})
+
+    async def async_digits(self, digit : str):
+        """
+        Send a digit keypress to the device. Digits are 0-9  
+
+        """
+        if (digit not in BEOPLAY_DIGITS):
+            return
+        await self.async_postReq("POST", BEOPLAY_DIGITS_URL, {BEOPLAY_DIGITS_KEY: int(digit)})
 
 
     ###############################################################
@@ -555,11 +575,23 @@ class BeoPlay(object):
     def Stop(self):
         self._postReq("POST", BEOPLAY_URL_STOP, "")
 
-    def Next(self):
+    def StepUp(self):
         self._postReq("POST", BEOPLAY_URL_STEPUP, "")
 
-    def Prev(self):
+    def StepDown(self):
         self._postReq("POST", BEOPLAY_URL_STEPDOWN, "")
+
+    def Forward(self):
+        self._postReq("POST", BEOPLAY_URL_FORWARD, "")
+
+    def Backward(self):
+        self._postReq("POST", BEOPLAY_URL_BACKWARD, "")
+
+    def Repeat(self):
+        self._postReq("POST", BEOPLAY_URL_REPEAT, "")
+
+    def Shuffle(self):
+        self._postReq("POST", BEOPLAY_URL_SHUFFLE, "")
 
     def Standby(self):
         self._postReq(

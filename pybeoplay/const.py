@@ -38,3 +38,7 @@ BEOPLAY_URL_PLAYQUEUE_INSTANT = '?instantplay'
 
 BEOPLAY_REMOTE_COMMANDS = ['Cursor/Select', 'Cursor/Up', 'Cursor/Down', 'Cursor/Left', 'Cursor/Right', 'Cursor/Exit', 'Cursor/Back', 'Cursor/PageUp', 'Cursor/PageDown', 'Cursor/Clear', 'Stream/Play', 'Stream/Stop', 'Stream/Pause', 'Stream/Wind', 'Stream/Rewind', 'Stream/Forward', 'Stream/Backward', 'List/StepUp', 'List/StepDown', 'List/PreviousElement', 'List/Shuffle', 'List/Repeat', 'Menu/Root', 'Menu/Option', 'Menu/Setup', 'Menu/Contents', 'Menu/Favorites', 'Menu/ElectronicProgramGuide', 'Menu/VideoOnDemand', 'Menu/Text', 'Menu/HbbTV,Menu/HomeControl', 'Device/Information', 'Device/Eject', 'Device/TogglePower', 'Device/Languages', 'Device/Subtitles', 'Device/OneWayJoin', 'Device/Mots', 'Record/Record', 'Generic/Blue', 'Generic/Red', 'Generic/Green', 'Generic/Yellow']
 BEOPLAY_REMOTE_PREFIX = 'BeoZone/Zone/'
+
+BEOPLAY_DIGITS = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+BEOPLAY_DIGITS_URL = 'BeoZone/Zone/Digits'
+BEOPLAY_DIGITS_KEY = 'digits'
