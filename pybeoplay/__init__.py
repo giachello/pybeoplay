@@ -62,6 +62,9 @@ class BeoPlay(object):
         self.sources = []
         self.sourcesID = []
         self.sourcesBorrowed = []
+        # Sound modes
+        self.soundMode = None
+        self.soundModes = {}
         # Stand control
         self.standPosition = None
         self.standPositions = []
@@ -247,7 +250,24 @@ class BeoPlay(object):
                 self.on = False
             return self.on
         return
+    
+    async def async_get_sound_mode(self):
+        r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
+        if r:
+            self.soundMode = r["mode"]["active"]
+            return self.soundMode
+        return
 
+    async def async_get_sound_modes(self):
+        r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
+        if r:
+            r = r.get("mode", {"list": []})
+            r = r.get("list", [])
+            for element in r:
+                self.soundModes[element["friendlyName"]] = element["id"]
+            return self.soundModes
+        return
+    
     async def async_get_stand_position(self):
         """Returns the stand position, or None if not retrieved."""
         r = await self.async_getReq("BeoZone/Zone/Stand/Active")
@@ -352,6 +372,19 @@ class BeoPlay(object):
                     {"primaryExperience": {"source": {"id": chosenSource}}},
                 )
             i += 1
+
+    async def async_set_sound_mode(self, soundMode):
+        # get sound modes if not already done
+        if not self.soundModes:
+            await self.async_get_sound_modes()
+        
+        if soundMode not in self.soundModes:
+            raise ValueError("Sound mode not available")
+        
+        soundModeId = self.soundModes[soundMode]
+        
+        await self.async_postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
+            
 
     async def async_set_stand_position(self, standPosition):
         i = 0
@@ -525,6 +558,19 @@ class BeoPlay(object):
             else:
                 self.on = False
 
+    def getSoundMode(self):
+        r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
+        if r:
+            self.soundMode = r["mode"]["active"]
+
+    def getSoundModes(self):
+        r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
+        if r:
+            r = r.get("mode", {"list": []})
+            r = r.get("list", [])
+            for element in r:
+                self.soundModes[element["friendlyName"]] = element["id"]
+
     def getStandPosition(self):
         r = self._getReq("BeoZone/Zone/Stand/Active")
         if r:
@@ -617,6 +663,18 @@ class BeoPlay(object):
                     {"primaryExperience": {"source": {"id": chosenSource}}},
                 )
             i += 1
+
+    def setSoundMode(self, soundMode):
+        # get sound modes if not already done
+        if not self.soundModes:
+            self.getSoundModes()
+        
+        if soundMode not in self.soundModes:
+            raise ValueError("Sound mode not available")
+        
+        soundModeId = self.soundModes[soundMode]
+        
+        self._postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
 
     def setStandPosition(self, standPosition):
         i = 0
