@@ -64,7 +64,7 @@ class BeoPlay(object):
         self.sourcesBorrowed = []
         # Sound modes
         self.soundMode = None
-        self.soundModes = {}
+        self._soundModes = {}
         # Stand control
         self.standPosition = None
         self.standPositions = []
@@ -114,6 +114,16 @@ class BeoPlay(object):
     def digits(self):
         """Get the list of available digits"""
         return BEOPLAY_DIGITS
+    
+    @property
+    def soundModes(self):
+        """Get the list of available sound modes"""
+        return list(self._soundModes.keys())
+    
+    @property
+    def soundModesID(self):
+        """Get the list of available sound modes"""
+        return list(self._soundModes.values())
 
     ###############################################################
     # ASYNC BASED NETWORK CALLS
@@ -264,8 +274,8 @@ class BeoPlay(object):
             r = r.get("mode", {"list": []})
             r = r.get("list", [])
             for element in r:
-                self.soundModes[element["friendlyName"]] = element["id"]
-            return self.soundModes
+                self._soundModes[element["friendlyName"]] = element["id"]
+            return self._soundModes
         return
     
     async def async_get_stand_position(self):
@@ -375,13 +385,13 @@ class BeoPlay(object):
 
     async def async_set_sound_mode(self, soundMode):
         # get sound modes if not already done
-        if not self.soundModes:
+        if not self._soundModes:
             await self.async_get_sound_modes()
         
-        if soundMode not in self.soundModes:
+        if soundMode not in self._soundModes:
             raise ValueError("Sound mode not available")
         
-        soundModeId = self.soundModes[soundMode]
+        soundModeId = self._soundModes[soundMode]
         
         await self.async_postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
             
@@ -569,7 +579,7 @@ class BeoPlay(object):
             r = r.get("mode", {"list": []})
             r = r.get("list", [])
             for element in r:
-                self.soundModes[element["friendlyName"]] = element["id"]
+                self._soundModes[element["friendlyName"]] = element["id"]
 
     def getStandPosition(self):
         r = self._getReq("BeoZone/Zone/Stand/Active")
@@ -666,13 +676,13 @@ class BeoPlay(object):
 
     def setSoundMode(self, soundMode):
         # get sound modes if not already done
-        if not self.soundModes:
+        if not self._soundModes:
             self.getSoundModes()
         
-        if soundMode not in self.soundModes:
+        if soundMode not in self._soundModes:
             raise ValueError("Sound mode not available")
         
-        soundModeId = self.soundModes[soundMode]
+        soundModeId = self._soundModes[soundMode]
         
         self._postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
 
