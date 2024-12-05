@@ -263,10 +263,6 @@ class BeoPlay(object):
         return
     
     async def async_get_sound_mode(self):
-        # Retreive sound modes if not available
-        if not self.soundModes:
-            await self.async_get_sound_modes()
-
         # If still not available assume sound modes are not supported
         if not self.soundModes:
             return
