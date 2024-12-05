@@ -199,6 +199,7 @@ class BeoPlay(object):
             async with self._clientsession.get(self._host_notifications) as response:
                 data = None
                 if response.status == 200:
+                    counter = 0
                     while True:
                         data = await response.content.readline()
                         if data and len(data) > 0:
@@ -211,6 +212,8 @@ class BeoPlay(object):
                                 self._processNotification(data_json)
                                 if callback is not None:
                                     callback(data_json["notification"])
+                        if counter > 10:
+                            await self.async_get_sound_mode()
                         else:
                             break
                 else:
