@@ -262,9 +262,18 @@ class BeoPlay(object):
         return
     
     async def async_get_sound_mode(self):
+        # Retreive sound modes if not available
+        if not self.soundModes:
+            await self.async_get_sound_modes()
+
+        # If still not available assume sound modes are not supported
+        if not self.soundModes:
+            return
+            
         r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
-            self.soundMode = r["mode"]["active"]
+            soundModes = {v: k for k, v in self._soundModes.items()}
+            self.soundMode = soundModes[r["mode"]["active"]]
             return self.soundMode
         return
 
@@ -569,9 +578,18 @@ class BeoPlay(object):
                 self.on = False
 
     def getSoundMode(self):
+        # Retreive sound modes if not available
+        if not self.soundModes:
+            self.getSoundModes()
+
+        # If still not available assume sound modes are not supported
+        if not self.soundModes:
+            return
+            
         r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
-            self.soundMode = r["mode"]["active"]
+            soundModes = {v: k for k, v in self._soundModes.items()}
+            self.soundMode = soundModes[r["mode"]["active"]]
 
     def getSoundModes(self):
         r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
