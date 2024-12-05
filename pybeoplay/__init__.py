@@ -575,10 +575,6 @@ class BeoPlay(object):
                 self.on = False
 
     def getSoundMode(self):
-        # Retreive sound modes if not available
-        if not self.soundModes:
-            self.getSoundModes()
-
         # If still not available assume sound modes are not supported
         if not self.soundModes:
             return
