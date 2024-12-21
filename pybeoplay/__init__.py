@@ -71,6 +71,11 @@ class BeoPlay(object):
         self.standPositionsID = []
 
     @property
+    def host(self):
+        """Return the device host."""
+        return self._host
+    
+    @property
     def name(self):
         """Return the device name."""
         return self._name
