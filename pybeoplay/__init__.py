@@ -211,7 +211,6 @@ class BeoPlay(object):
                                 self._processNotification(data_json)
                                 if callback is not None:
                                     callback(data_json["notification"])
-                            await self.async_get_sound_mode()
                         else:
                             break
                 else:
@@ -860,6 +859,11 @@ class BeoPlay(object):
                 + data["notification"]["data"]["name"]
             )
 
+    def _processSoundMode(self, data):
+        if data["notification"]["type"] == "SOUND_ACTIVE_MODE_CHANGED":
+            self.soundMode = data["notification"]["data"]["friendlyName"]
+
+
     def _processNotification(self, data):
         """Cumulative process all the potential notification information."""
         try:
@@ -871,5 +875,7 @@ class BeoPlay(object):
             self._processState(data)
             # get currently playing music info
             self._processMusicInfo(data)
+            # get sound mode
+            self._processSoundMode(data)
         except KeyError:
             LOG.debug("Malformed notification: %s", str(data))
