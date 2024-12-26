@@ -25,17 +25,31 @@ if __name__ == '__main__':
     print ("Name: ",gateway.name)
     print ("Standby: ", gateway.on)
     
+    print ("--- SOURCES ---")
     gateway.getSources()
     print (gateway.sources)
     print (gateway.sourcesID)
     print (gateway.sourcesBorrowed)
+    gateway.getSource()
+    print ("Active source: ", gateway.source)
     
+    print ("--- STAND POSITIONS ---")
     gateway.getStandPositions()
     print (gateway.standPositions)
     print (gateway.standPositionsID)
 
     gateway.getStandPosition()
     print ("Stand Position: ", gateway.standPosition)
+
+    print ("--- SOUND MODES ---")
+    gateway.getSoundMode()
+    print("Sound Mode: ", gateway.soundMode)
+    gateway.getSoundModes()
+    print (gateway.soundModes)
+    print (gateway.soundModesID)
+    print("Sound Mode: ", gateway.soundMode)
+    gateway.getSoundMode()
+    print("Sound Mode: ", gateway.soundMode)
 
     gateway.getStandby()
     print ("On State: ", gateway.on)

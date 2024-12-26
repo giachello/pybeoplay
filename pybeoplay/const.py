@@ -5,16 +5,15 @@
 # Lifted a lot of code from marton borzak's ha-beoplay
 #
 #
-# pybeoplay constants
-#
 
-
+# Connection constants
 BASE_URL = 'http://{0}:8080/{1}'
 TIMEOUT = 5.0
 CONNFAILCOUNT = 5
 
-
+# BeoPlay constants
 BEOPLAY_URL_NOTIFICATIONS = 'BeoNotify/Notifications'
+
 BEOPLAY_URL_SET_VOLUME = 'BeoZone/Zone/Sound/Volume/Speaker/Level'
 BEOPLAY_URL_MUTE = 'BeoZone/Zone/Sound/Volume/Speaker/Muted'
 BEOPLAY_URL_PLAY = 'BeoZone/Zone/Stream/Play'
@@ -28,10 +27,15 @@ BEOPLAY_URL_STEPDOWN = 'BeoZone/Zone/List/StepDown'
 BEOPLAY_URL_SHUFFLE = 'BeoZone/Zone/List/Shuffle'
 BEOPLAY_URL_REPEAT = 'BeoZone/Zone/List/Repeat'
 BEOPLAY_URL_STANDBY = 'BeoDevice/powerManagement/standby'
-BEOPLAY_URL_SET_SOURCE = 'BeoZone/Zone/ActiveSources'
-BEOPLAY_URL_SET_STAND = 'BeoZone/Zone/Stand/Active'
+
+BEOPLAY_URL_GET_SOURCES = 'BeoZone/Zone/Sources'
+BEOPLAY_URL_ACTIVE_SOURCES = 'BeoZone/Zone/ActiveSources'
+
+BEOPLAY_URL_STAND_ACTIVE = 'BeoZone/Zone/Stand/Active'
+BEOPLAY_URL_STAND = 'BeoZone/Zone/Stand'
 BEOPLAY_URL_GET_SOUND_MODE = 'BeoZone/Zone/Sound/Mode'
 BEOPLAY_URL_SET_SOUND_MODE = 'BeoZone/Zone/Sound/Mode/Active'
+
 BEOPLAY_URL_JOIN_EXPERIENCE = 'BeoZone/Zone/Device/OneWayJoin'
 BEOPLAY_URL_LEAVE_EXPERIENCE = 'BeoZone/Zone/ActiveSources/primaryExperience'
 BEOPLAY_URL_PLAYQUEUE = 'BeoZone/Zone/PlayQueue'

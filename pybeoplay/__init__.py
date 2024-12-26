@@ -1,12 +1,13 @@
-#
-# BeoPlay JSON interface for Bang & Olufsen Speakers, TVs and other NL devices
-# Reference: https://documenter.getpostman.com/view/1053298/T1LTe4Lt#intro
-# Reference: https://raw.githubusercontent.com/PolyPv/BeoRemote/master/BeoRemote.txt
-# Lifted a lot of code from marton borzak's ha-beoplay
-#
-#
-# https://widdowquinn.github.io/coding/update-pypi-package/
-#
+"""
+
+BeoPlay JSON interface for Bang & Olufsen Speakers, TVs and other NL devices
+Reference: https://documenter.getpostman.com/view/1053298/T1LTe4Lt#intro
+Reference: https://raw.githubusercontent.com/PolyPv/BeoRemote/master/BeoRemote.txt
+Lifted a lot of code from marton borzak's ha-beoplay
+
+https://widdowquinn.github.io/coding/update-pypi-package/
+
+"""
 
 import requests
 import aiohttp
@@ -25,7 +26,8 @@ class BeoPlay(object):
         """Initializes a BeoPlay connection to the speaker / TV
         Host: the IP address of the speaker
         Session (optional): a asyncio client session to be used for async
-        communication with the speaker (if not provided, only blocking calls using Requests will work
+        communication with the speaker (if not provided, only blocking calls 
+        using Requests will work)
         """
         # network information
         self._host = host
@@ -34,6 +36,7 @@ class BeoPlay(object):
         )
         self._connfail = 0
         self._clientsession = session
+        # The following are only going ot be valid after a call to getDeviceInfo
         # device information
         self._name = None
         self._serialNumber = None
@@ -42,6 +45,10 @@ class BeoPlay(object):
         self._typeName = None
         self._softwareVersion = None
         self._hardwareVersion = None
+        # The following are only going ot be valid after a call to getMediaInfo, getStandby
+        # Or, they are updated by the Notifications task. The actual field updated by
+        # Notifications varies by device. Some devices for example provide notifications when
+        # Sound mode changes (e.g., Stage), others (e.g., BeoVision Avant 55) don't.
         # State and Media information
         self.on = None
         self.min_volume = None
@@ -57,14 +64,17 @@ class BeoPlay(object):
         self.media_country = None
         self.media_languages = None
         self.primary_experience = None
+        # The following are only going ot be valid after a call to getSources
         # Sources
         self.source = None
         self.sources = []
         self.sourcesID = []
         self.sourcesBorrowed = []
+        # The following are only going ot be valid after a call to getSoundModes
         # Sound modes
-        self.soundMode = None
+        self._soundMode = None
         self._soundModes = {}
+        # The following are only going ot be valid after a call to getStandPosition
         # Stand control
         self.standPosition = None
         self.standPositions = []
@@ -121,13 +131,18 @@ class BeoPlay(object):
         return BEOPLAY_DIGITS
     
     @property
+    def soundMode(self):
+        """Get the current sound modes"""
+        return self._soundMode
+    
+    @property
     def soundModes(self):
         """Get the list of available sound modes"""
         return list(self._soundModes.keys())
     
     @property
     def soundModesID(self):
-        """Get the list of available sound modes"""
+        """Get the list of available sound mode IDs"""
         return list(self._soundModes.values())
 
     ###############################################################
@@ -236,9 +251,16 @@ class BeoPlay(object):
     # GET ATTRIBUTES FROM THE SPEAKER - NON-BLOCKING CALLS
     ###############################################################
 
+    async def async_get_source(self):
+        self.source = None
+        r = await self.async_getReq(BEOPLAY_URL_ACTIVE_SOURCES)
+        if r:
+            self.source = r["primaryExperience"]["source"]["friendlyName"] if "friendlyName" in r["primaryExperience"]["source"] else None
+        return self.source
+
     # edited to only include in Use sources
     async def async_get_sources(self):
-        r = await self.async_getReq("BeoZone/Zone/Sources")
+        r = await self.async_getReq(BEOPLAY_URL_GET_SOURCES)
         if r:
             # clear previously stored sources
             self.sources = []
@@ -257,7 +279,7 @@ class BeoPlay(object):
 
     async def async_get_standby(self) -> bool:
         """Returns True of the device is on, False if off."""
-        r = await self.async_getReq("BeoDevice/powerManagement/standby")
+        r = await self.async_getReq(BEOPLAY_URL_STANDBY)
         if r:
             if r["standby"]["powerState"] == "on":
                 self.on = True
@@ -267,30 +289,29 @@ class BeoPlay(object):
         return
     
     async def async_get_sound_mode(self):
-        # If still not available assume sound modes are not supported
-        if not self.soundModes:
-            return
-            
-        r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
-        if r:
-            soundModes = {v: k for k, v in self._soundModes.items()}
-            self.soundMode = soundModes[r["mode"]["active"]]
-            return self.soundMode
-        return
+        """Returns the current sound mode, or None if not retrieved."""
+        self._soundMode = None
+        await self.async_get_sound_modes()
+        return self._soundMode
 
     async def async_get_sound_modes(self):
+        """Returns a dictionary of available sound modes, or None if not retrieved."""
         r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
             r = r.get("mode", {"list": []})
-            r = r.get("list", [])
-            for element in r:
+            l = r.get("list", [])
+            a = r.get("active", None)
+            for element in l:
                 self._soundModes[element["friendlyName"]] = element["id"]
+                if a and a == element["id"]:
+                    self._soundMode = element["friendlyName"]
             return self._soundModes
         return
     
     async def async_get_stand_position(self):
         """Returns the stand position, or None if not retrieved."""
-        r = await self.async_getReq("BeoZone/Zone/Stand/Active")
+        self._standPosition = None
+        r = await self.async_getReq(BEOPLAY_URL_STAND_ACTIVE)
         if r:
             if r["active"] is not None:
                 self._standPosition = r["active"]
@@ -298,11 +319,11 @@ class BeoPlay(object):
         return
 
     async def async_get_stand_positions(self):
-        r = await self.async_getReq("BeoZone/Zone/Stand")
+        # clear previous stand positions
+        self.standPositions = []
+        self.standPositionsID = []        
+        r = await self.async_getReq(BEOPLAY_URL_STAND)
         if r:
-            # clear previous stand positions
-            self.standPositions = []
-            self.standPositionsID = []
             for elements in r:
                 i = 0
                 while i < len(r[elements]):
@@ -388,7 +409,7 @@ class BeoPlay(object):
                 chosenSource = self.sourcesID[i]
                 await self.async_postReq(
                     "POST",
-                    BEOPLAY_URL_SET_SOURCE,
+                    BEOPLAY_URL_ACTIVE_SOURCES,
                     {"primaryExperience": {"source": {"id": chosenSource}}},
                 )
             i += 1
@@ -412,7 +433,7 @@ class BeoPlay(object):
             if self.standPositions[i] == standPosition:
                 chosenStandPosition = self.standPositionsID[i]
                 await self.async_postReq(
-                    "PUT", BEOPLAY_URL_SET_STAND, {"active": chosenStandPosition}
+                    "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
                 )
             i += 1
 
@@ -559,7 +580,7 @@ class BeoPlay(object):
 
     # edited to only include in Use sources
     def getSources(self):
-        r = self._getReq("BeoZone/Zone/Sources")
+        r = self._getReq(BEOPLAY_URL_GET_SOURCES)
         if r:
             for elements in r:
                 i = 0
@@ -570,8 +591,15 @@ class BeoPlay(object):
                         self.sourcesID.append(r[elements][i][0])
                     i += 1
 
+    def getSource(self):
+        self.source = None
+        r = self._getReq(BEOPLAY_URL_ACTIVE_SOURCES)
+        if r:
+            self.source = r["primaryExperience"]["source"]["friendlyName"] if "friendlyName" in r["primaryExperience"]["source"] else None
+        return self.source
+
     def getStandby(self):
-        r = self._getReq("BeoDevice/powerManagement/standby")
+        r = self._getReq(BEOPLAY_URL_STANDBY)
         if r:
             if r["standby"]["powerState"] == "on":
                 self.on = True
@@ -579,31 +607,38 @@ class BeoPlay(object):
                 self.on = False
 
     def getSoundMode(self):
-        # If still not available assume sound modes are not supported
-        if not self.soundModes:
-            return
-            
-        r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
-        if r:
-            soundModes = {v: k for k, v in self._soundModes.items()}
-            self.soundMode = soundModes[r["mode"]["active"]]
+        """ Get sound mode. Return the current active sound mode or None if not retreived."""
+        self._soundMode = None
+        self.getSoundModes()
+        return self._soundMode
 
     def getSoundModes(self):
+        """ Get sound modes. You need to call this before reading soundMode or soundModes."""
         r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
             r = r.get("mode", {"list": []})
-            r = r.get("list", [])
-            for element in r:
+            l = r.get("list", [])
+            a = r.get("active", None)
+            for element in l:
                 self._soundModes[element["friendlyName"]] = element["id"]
+                if a and a == element["id"]:
+                    self._soundMode = element["friendlyName"]
+            return self._soundModes
+        return None
 
     def getStandPosition(self):
-        r = self._getReq("BeoZone/Zone/Stand/Active")
+        self._standPosition = None
+        r = self._getReq(BEOPLAY_URL_STAND_ACTIVE)
         if r:
             if r["active"] is not None:
-                self._standPosition = r["active"]
+                self._standPosition = r["active"] 
+            return self._standPosition
+        return None
 
     def getStandPositions(self):
-        r = self._getReq("BeoZone/Zone/Stand")
+        self.standPositions = []
+        self.standPositionsID = []
+        r = self._getReq(BEOPLAY_URL_STAND)
         if r:
             for elements in r:
                 i = 0
@@ -611,6 +646,7 @@ class BeoPlay(object):
                     self.standPositions.append(r[elements][i][1]["friendlyName"])
                     self.standPositionsID.append(r[elements][i][0])
                     i += 1
+            return self.standPositions
 
     def getDeviceInfo(self):
         r = self._getReq("BeoDevice")
@@ -684,7 +720,7 @@ class BeoPlay(object):
                 chosenSource = self.sourcesID[i]
                 self._postReq(
                     "POST",
-                    BEOPLAY_URL_SET_SOURCE,
+                    BEOPLAY_URL_ACTIVE_SOURCES,
                     {"primaryExperience": {"source": {"id": chosenSource}}},
                 )
             i += 1
@@ -707,7 +743,7 @@ class BeoPlay(object):
             if self.standPositions[i] == standPosition:
                 chosenStandPosition = self.standPositionsID[i]
                 self._postReq(
-                    "PUT", BEOPLAY_URL_SET_STAND, {"active": chosenStandPosition}
+                    "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
                 )
             i += 1
 

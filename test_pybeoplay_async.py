@@ -49,6 +49,12 @@ async def main(host):
 
         sources = await gateway.async_get_sources()
         print ("Sources: ", sources)
+        await gateway.async_get_source()
+        print ("Active Source: ", gateway.source)
+
+        modes = await gateway.async_get_sound_modes()
+        print ("Sound Modes: ", modes)
+        print ("Active Sound Mode: ", gateway.soundMode)
 
         asyncio.create_task(test_remote(gateway))
         asyncio.create_task(test_digits(gateway))
@@ -71,6 +77,7 @@ async def main(host):
             print ("Media country: " , gateway.media_country)
             print ("Media languages: " , gateway.media_languages)
             print ("Primary experience: " , gateway.primary_experience)
+            print ("Sound Mode: " , gateway.soundMode)
 
         r = await  gateway.async_notificationsTask(callback)
         print (str(r))
@@ -87,6 +94,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2:
         quit()
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  
 
     asyncio.run(main(sys.argv[1]))
 
