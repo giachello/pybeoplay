@@ -267,9 +267,14 @@ class BeoPlay(object):
         return
     
     async def async_get_sound_mode(self):
+        # If still not available assume sound modes are not supported
+        if not self.soundModes:
+            return
+            
         r = await self.async_getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
-            self.soundMode = r["mode"]["active"]
+            soundModes = {v: k for k, v in self._soundModes.items()}
+            self.soundMode = soundModes[r["mode"]["active"]]
             return self.soundMode
         return
 
@@ -574,9 +579,14 @@ class BeoPlay(object):
                 self.on = False
 
     def getSoundMode(self):
+        # If still not available assume sound modes are not supported
+        if not self.soundModes:
+            return
+            
         r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
         if r:
-            self.soundMode = r["mode"]["active"]
+            soundModes = {v: k for k, v in self._soundModes.items()}
+            self.soundMode = soundModes[r["mode"]["active"]]
 
     def getSoundModes(self):
         r = self._getReq(BEOPLAY_URL_GET_SOUND_MODE)
@@ -854,6 +864,11 @@ class BeoPlay(object):
                 + data["notification"]["data"]["name"]
             )
 
+    def _processSoundMode(self, data):
+        if data["notification"]["type"] == "SOUND_ACTIVE_MODE_CHANGED":
+            self.soundMode = data["notification"]["data"]["friendlyName"]
+
+
     def _processNotification(self, data):
         """Cumulative process all the potential notification information."""
         try:
@@ -865,5 +880,7 @@ class BeoPlay(object):
             self._processState(data)
             # get currently playing music info
             self._processMusicInfo(data)
+            # get sound mode
+            self._processSoundMode(data)
         except KeyError:
             LOG.debug("Malformed notification: %s", str(data))
