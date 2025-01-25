@@ -76,9 +76,9 @@ class BeoPlay(object):
         self._soundModes = {}
         # The following are only going ot be valid after a call to getStandPosition
         # Stand control
-        self.standPosition = None
-        self.standPositions = []
-        self.standPositionsID = []
+        self._standPosition = None
+        self._standPositions = []
+        self._standPositionsID = []
 
     @property
     def host(self):
@@ -144,6 +144,21 @@ class BeoPlay(object):
     def soundModesID(self):
         """Get the list of available sound mode IDs"""
         return list(self._soundModes.values())
+
+    @property
+    def standPosition(self):
+        """Get the current sound modes"""
+        return self._standPosition
+    
+    @property
+    def standPositions(self):
+        """Get the list of available sound modes"""
+        return self._standPositions
+    
+    @property
+    def standPositionsID(self):
+        """Get the list of available sound modes"""
+        return self._standPositionsID
 
     ###############################################################
     # ASYNC BASED NETWORK CALLS
@@ -320,17 +335,17 @@ class BeoPlay(object):
 
     async def async_get_stand_positions(self):
         # clear previous stand positions
-        self.standPositions = []
-        self.standPositionsID = []        
+        self._standPositions = []
+        self._standPositionsID = []        
         r = await self.async_getReq(BEOPLAY_URL_STAND)
         if r:
             for elements in r:
                 i = 0
                 while i < len(r[elements]):
-                    self.standPositions.append(r[elements][i][1]["friendlyName"])
-                    self.standPositionsID.append(r[elements][i][0])
+                    self._standPositions.append(r[elements][i][1]["friendlyName"])
+                    self._standPositionsID.append(r[elements][i][0])
                     i += 1
-            return self.standPositions
+            return self._standPositions
         return
 
     async def async_get_device_info(self):
@@ -429,9 +444,9 @@ class BeoPlay(object):
 
     async def async_set_stand_position(self, standPosition):
         i = 0
-        while i < len(self.standPositions):
-            if self.standPositions[i] == standPosition:
-                chosenStandPosition = self.standPositionsID[i]
+        while i < len(self._standPositions):
+            if self._standPositions[i] == standPosition:
+                chosenStandPosition = self._standPositionsID[i]
                 await self.async_postReq(
                     "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
                 )
@@ -636,17 +651,17 @@ class BeoPlay(object):
         return None
 
     def getStandPositions(self):
-        self.standPositions = []
-        self.standPositionsID = []
+        self._standPositions = []
+        self._standPositionsID = []
         r = self._getReq(BEOPLAY_URL_STAND)
         if r:
             for elements in r:
                 i = 0
                 while i < len(r[elements]):
-                    self.standPositions.append(r[elements][i][1]["friendlyName"])
-                    self.standPositionsID.append(r[elements][i][0])
+                    self._standPositions.append(r[elements][i][1]["friendlyName"])
+                    self._standPositionsID.append(r[elements][i][0])
                     i += 1
-            return self.standPositions
+            return self._standPositions
 
     def getDeviceInfo(self):
         r = self._getReq("BeoDevice")
@@ -739,9 +754,9 @@ class BeoPlay(object):
 
     def setStandPosition(self, standPosition):
         i = 0
-        while i < len(self.standPositions):
-            if self.standPositions[i] == standPosition:
-                chosenStandPosition = self.standPositionsID[i]
+        while i < len(self._standPositions):
+            if self._standPositions[i] == standPosition:
+                chosenStandPosition = self._standPositionsID[i]
                 self._postReq(
                     "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
                 )
