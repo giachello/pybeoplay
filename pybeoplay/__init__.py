@@ -902,7 +902,7 @@ class BeoPlay(object):
 
     def _processSoundMode(self, data):
         if data["notification"]["type"] == "SOUND_ACTIVE_MODE_CHANGED":
-            self.soundMode = data["notification"]["data"]["friendlyName"]
+            self._soundMode = data["notification"]["data"]["friendlyName"]
 
 
     def _processNotification(self, data):
