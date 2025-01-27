@@ -36,7 +36,6 @@ if __name__ == '__main__':
     print ("--- STAND POSITIONS ---")
     gateway.getStandPositions()
     print (gateway.standPositions)
-    print (gateway.standPositionsID)
 
     gateway.getStandPosition()
     print ("Stand Position: ", gateway.standPosition)
@@ -46,7 +45,6 @@ if __name__ == '__main__':
     print("Sound Mode: ", gateway.soundMode)
     gateway.getSoundModes()
     print (gateway.soundModes)
-    print (gateway.soundModesID)
     print("Sound Mode: ", gateway.soundMode)
     gateway.getSoundMode()
     print("Sound Mode: ", gateway.soundMode)

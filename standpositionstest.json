@@ -1,0 +1,136 @@
+{
+    "stand": {
+      "list": [
+        {
+          "id": 0,
+          "friendlyName": "Start-up",
+          "type": "startUp",
+          "_links": {
+            "/relation/persist": {
+              "href": "./0/persist"
+            },
+            "self": {
+              "href": "./0"
+            }
+          }
+        },
+        {
+          "id": 1,
+          "friendlyName": "Standby",
+          "type": "standby",
+          "_links": {
+            "/relation/persist": {
+              "href": "./1/persist"
+            },
+            "self": {
+              "href": "./1"
+            }
+          }
+        },
+        {
+          "id": 1000,
+          "friendlyName": "Snapshot",
+          "type": "snapshot",
+          "_links": {
+            "self": {
+              "href": "./1000"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "friendlyName": "audio",
+          "type": "userDefined",
+          "_capabilities": {
+            "editable": [
+              "friendlyName"
+            ]
+          },
+          "_links": {
+            "/relation/delete": {
+              "href": "./2"
+            },
+            "/relation/modify": {
+              "href": "./2"
+            },
+            "/relation/persist": {
+              "href": "./2/persist"
+            },
+            "self": {
+              "href": "./2"
+            }
+          }
+        },
+        {
+          "id": 1001,
+          "friendlyName": "Snapshot",
+          "type": "snapshot",
+          "_links": {
+            "self": {
+              "href": "./1001"
+            }
+          }
+        },
+        {
+          "id": 1002,
+          "friendlyName": "Snapshot",
+          "type": "snapshot",
+          "_links": {
+            "self": {
+              "href": "./1002"
+            }
+          }
+        },
+        {
+          "id": 1003,
+          "friendlyName": "Snapshot",
+          "type": "snapshot",
+          "_links": {
+            "self": {
+              "href": "./1003"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "standType": "wallBracket",
+        "configured": true,
+        "hinging": "right",
+        "_capabilities": {
+          "editable": [
+            "hinging"
+          ],
+          "value": {
+            "hinging": [
+              "left",
+              "right"
+            ]
+          }
+        },
+        "_links": {
+          "/relation/modify": {
+            "href": "./Setup"
+          },
+          "/relation/reset": {
+            "href": "./Setup/reset"
+          }
+        }
+      },
+      "active": 0,
+      "manuallyAdjusted": false,
+      "_links": {
+        "/relation/create": {
+          "href": "./create"
+        }
+      }
+    },
+    "_links": {
+      "/relation/standmotion/turn": {
+        "href": "./Turn"
+      },
+      "self": {
+        "href": "."
+      }
+    }
+  }
+  

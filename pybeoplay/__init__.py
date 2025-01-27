@@ -77,8 +77,7 @@ class BeoPlay(object):
         # The following are only going ot be valid after a call to getStandPosition
         # Stand control
         self._standPosition = None
-        self._standPositions = []
-        self._standPositionsID = []
+        self._standPositions = {}
 
     @property
     def host(self):
@@ -147,19 +146,14 @@ class BeoPlay(object):
 
     @property
     def standPosition(self):
-        """Get the current sound modes"""
+        """Get the current stand position"""
         return self._standPosition
     
     @property
     def standPositions(self):
-        """Get the list of available sound modes"""
+        """Get the list of available stand positions"""
         return self._standPositions
     
-    @property
-    def standPositionsID(self):
-        """Get the list of available sound modes"""
-        return self._standPositionsID
-
     ###############################################################
     # ASYNC BASED NETWORK CALLS
     ###############################################################
@@ -335,17 +329,13 @@ class BeoPlay(object):
 
     async def async_get_stand_positions(self):
         # clear previous stand positions
-        self._standPositions = []
-        self._standPositionsID = []        
+        self._standPositions = {}
         r = await self.async_getReq(BEOPLAY_URL_STAND)
         if r:
-            for elements in r:
-                i = 0
-                while i < len(r[elements]):
-                    self._standPositions.append(r[elements][i][1]["friendlyName"])
-                    self._standPositionsID.append(r[elements][i][0])
-                    i += 1
-            return self._standPositions
+            if r["stand"] is not None:
+                for elements in r["stand"]["list"]:
+                    self._standPositions[elements["friendlyName"]] = elements["id"]
+                return self._standPositions
         return
 
     async def async_get_device_info(self):
@@ -443,14 +433,15 @@ class BeoPlay(object):
             
 
     async def async_set_stand_position(self, standPosition):
-        i = 0
-        while i < len(self._standPositions):
-            if self._standPositions[i] == standPosition:
-                chosenStandPosition = self._standPositionsID[i]
-                await self.async_postReq(
-                    "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
-                )
-            i += 1
+        if not self._standPositions:
+            await self.async_get_stand_positions()
+        
+        if standPosition not in self._standPositions:
+            raise ValueError("Stand position not available")
+
+        standPositionID = self._standPositions.get(standPosition, None)
+
+        await self.async_postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     async def async_join_experience(self):
         await self.async_postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE)
@@ -651,17 +642,14 @@ class BeoPlay(object):
         return None
 
     def getStandPositions(self):
-        self._standPositions = []
-        self._standPositionsID = []
+        self._standPositions = {}
         r = self._getReq(BEOPLAY_URL_STAND)
         if r:
-            for elements in r:
-                i = 0
-                while i < len(r[elements]):
-                    self._standPositions.append(r[elements][i][1]["friendlyName"])
-                    self._standPositionsID.append(r[elements][i][0])
-                    i += 1
-            return self._standPositions
+            if r["stand"] is not None:
+                for elements in r["stand"]["list"]:
+                    self._standPositions[elements["friendlyName"]] = elements["id"]
+                return self._standPositions
+        return
 
     def getDeviceInfo(self):
         r = self._getReq("BeoDevice")
@@ -741,7 +729,7 @@ class BeoPlay(object):
             i += 1
 
     def setSoundMode(self, soundMode):
-        # get sound modes if not already done
+        """Get sound modes if not already done."""
         if not self._soundModes:
             self.getSoundModes()
         
@@ -753,14 +741,16 @@ class BeoPlay(object):
         self._postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
 
     def setStandPosition(self, standPosition):
-        i = 0
-        while i < len(self._standPositions):
-            if self._standPositions[i] == standPosition:
-                chosenStandPosition = self._standPositionsID[i]
-                self._postReq(
-                    "PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": chosenStandPosition}
-                )
-            i += 1
+        """Get sound modes if not already done."""
+        if not self._soundModes:
+            self.getSoundModes()
+        
+        if standPosition not in self._soundModes:
+            raise ValueError("Stand position not available")
+        
+        standPositionID = self._soundModes[standPosition]
+        
+        self._postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     def joinExperience(self):
         self._postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, "")
