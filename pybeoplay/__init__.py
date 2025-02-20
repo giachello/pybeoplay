@@ -321,7 +321,7 @@ class BeoPlay(object):
         """Returns the stand position, or None if not retrieved."""
         self._standPosition = None
         r = await self.async_getReq(BEOPLAY_URL_STAND_ACTIVE)
-        if r:
+        if r and "active" in r:
             if r["active"] is not None:
                 self._standPosition = r["active"]
             return self._standPosition
@@ -331,7 +331,7 @@ class BeoPlay(object):
         # clear previous stand positions
         self._standPositions = {}
         r = await self.async_getReq(BEOPLAY_URL_STAND)
-        if r:
+        if r and "stand" in r:
             if r["stand"] is not None:
                 for elements in r["stand"]["list"]:
                     self._standPositions[elements["friendlyName"]] = elements["id"]
@@ -635,7 +635,7 @@ class BeoPlay(object):
     def getStandPosition(self):
         self._standPosition = None
         r = self._getReq(BEOPLAY_URL_STAND_ACTIVE)
-        if r:
+        if r and "active" in r:
             if r["active"] is not None:
                 self._standPosition = r["active"] 
             return self._standPosition
@@ -644,7 +644,7 @@ class BeoPlay(object):
     def getStandPositions(self):
         self._standPositions = {}
         r = self._getReq(BEOPLAY_URL_STAND)
-        if r:
+        if r and "stand" in r:
             if r["stand"] is not None:
                 for elements in r["stand"]["list"]:
                     self._standPositions[elements["friendlyName"]] = elements["id"]
