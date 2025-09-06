@@ -32,6 +32,7 @@ if __name__ == '__main__':
     print (gateway.sourcesBorrowed)
     gateway.getSource()
     print ("Active source: ", gateway.source)
+    print ("Active listeners: ", gateway.listeners)
     
     print ("--- STAND POSITIONS ---")
     gateway.getStandPositions()

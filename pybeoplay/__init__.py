@@ -15,6 +15,7 @@ import asyncio
 from aiohttp import ClientResponse
 import json
 import logging
+from typing import Optional
 from .const import *
 
 
@@ -22,7 +23,7 @@ LOG = logging.getLogger(__name__)
 
 
 class BeoPlay(object):
-    def __init__(self, host, session: aiohttp.ClientSession = None):
+    def __init__(self, host, session: Optional[aiohttp.ClientSession] = None):
         """Initializes a BeoPlay connection to the speaker / TV
         Host: the IP address of the speaker
         Session (optional): a asyncio client session to be used for async
@@ -163,6 +164,7 @@ class BeoPlay(object):
         """Non blocking GET call to the speaker, with a given path."""
         if self._clientsession is None:
             LOG.error("Attempt asyncio with no ClientSession")
+            return
         try:
             async with self._clientsession.get(
                 BASE_URL.format(self._host, path)
@@ -177,7 +179,7 @@ class BeoPlay(object):
             LOG.info("Client error %s on %s" , str(_e), self._name)
             raise
 
-    async def async_postReq(self, type, path, jsondata: dict = None):
+    async def async_postReq(self, type, path, jsondata: dict = {}):
         """Non blocking POST call to the speaker, with a given path and JSON data.
         type: PUT POST or DELETE
         path: the path of the request
@@ -185,24 +187,25 @@ class BeoPlay(object):
         """
         if self._clientsession is None:
             LOG.error("Attempt asyncio with no ClientSession")
+            return
         try:
             if type == "PUT":
                 async with self._clientsession.put(
-                    BASE_URL.format(self._host, path), json=jsondata, timeout=TIMEOUT
+                    BASE_URL.format(self._host, path), json=jsondata, timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
                     LOG.debug("Status: %s", resp.status)
                     if resp.status != 200:
                         return False
             elif type == "POST":
                 async with self._clientsession.post(
-                    BASE_URL.format(self._host, path), json=jsondata, timeout=TIMEOUT
+                    BASE_URL.format(self._host, path), json=jsondata, timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
                     LOG.debug("Status: %s", resp.status)
                     if resp.status != 200:
                         return False
             elif type == "DELETE":
                 async with self._clientsession.delete(
-                    BASE_URL.format(self._host, path), timeout=TIMEOUT
+                    BASE_URL.format(self._host, path), timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
                     LOG.debug("Status: %s", resp.status)
                     if resp.status != 200:
@@ -225,6 +228,7 @@ class BeoPlay(object):
         """
         if self._clientsession is None:
             LOG.error("Attempt asyncio with no ClientSession")
+            return False
         try:
             async with self._clientsession.get(self._host_notifications) as response:
                 data = None
@@ -247,7 +251,7 @@ class BeoPlay(object):
                     LOG.error(
                         "Error %s on %s.",
                         response.status,
-                        self._speaker._host_notifications,
+                        self._host_notifications,
                     )
                     return False
 
@@ -262,6 +266,7 @@ class BeoPlay(object):
     ###############################################################
 
     async def async_get_source(self):
+        """Returns the current source, or None if not retrieved."""
         self.source = None
         r = await self.async_getReq(BEOPLAY_URL_ACTIVE_SOURCES)
         if r:
@@ -271,6 +276,7 @@ class BeoPlay(object):
 
     # edited to only include in Use sources
     async def async_get_sources(self):
+        """Returns a list of available sources, or None if not retrieved."""
         r = await self.async_getReq(BEOPLAY_URL_GET_SOURCES)
         if r:
             # clear previously stored sources
@@ -289,7 +295,7 @@ class BeoPlay(object):
         return
 
     async def async_get_standby(self) -> bool:
-        """Returns True of the device is on, False if off."""
+        """Returns True of the device is on, False if off or unavailable."""
         r = await self.async_getReq(BEOPLAY_URL_STANDBY)
         if r:
             if r["standby"]["powerState"] == "on":
@@ -297,7 +303,7 @@ class BeoPlay(object):
             else:
                 self.on = False
             return self.on
-        return
+        return False
     
     async def async_get_sound_mode(self):
         """Returns the current sound mode, or None if not retrieved."""
@@ -330,6 +336,7 @@ class BeoPlay(object):
         return
 
     async def async_get_stand_positions(self):
+        """Returns a list of available stand positions, or None if not retrieved."""
         # clear previous stand positions
         self._standPositions = {}
         r = await self.async_getReq(BEOPLAY_URL_STAND)
@@ -546,7 +553,7 @@ class BeoPlay(object):
             self._connfail = CONNFAILCOUNT
             return None
 
-    def _postReq(self, type, path, data=""):
+    def _postReq(self, type, path, data: dict = {}):
         try:
             r = None
             if self._connfail:
@@ -680,31 +687,31 @@ class BeoPlay(object):
             self._postReq("PUT", BEOPLAY_URL_MUTE, {"muted": False})
 
     def Play(self):
-        self._postReq("POST", BEOPLAY_URL_PLAY, "")
+        self._postReq("POST", BEOPLAY_URL_PLAY, {})
 
     def Pause(self):
-        self._postReq("POST", BEOPLAY_URL_PAUSE, "")
+        self._postReq("POST", BEOPLAY_URL_PAUSE, {})
 
     def Stop(self):
-        self._postReq("POST", BEOPLAY_URL_STOP, "")
+        self._postReq("POST", BEOPLAY_URL_STOP, {})
 
     def StepUp(self):
-        self._postReq("POST", BEOPLAY_URL_STEPUP, "")
+        self._postReq("POST", BEOPLAY_URL_STEPUP, {})
 
     def StepDown(self):
-        self._postReq("POST", BEOPLAY_URL_STEPDOWN, "")
+        self._postReq("POST", BEOPLAY_URL_STEPDOWN, {})
 
     def Forward(self):
-        self._postReq("POST", BEOPLAY_URL_FORWARD, "")
+        self._postReq("POST", BEOPLAY_URL_FORWARD, {})
 
     def Backward(self):
-        self._postReq("POST", BEOPLAY_URL_BACKWARD, "")
+        self._postReq("POST", BEOPLAY_URL_BACKWARD, {})
 
     def Repeat(self):
-        self._postReq("POST", BEOPLAY_URL_REPEAT, "")
+        self._postReq("POST", BEOPLAY_URL_REPEAT, {})
 
     def Shuffle(self):
-        self._postReq("POST", BEOPLAY_URL_SHUFFLE, "")
+        self._postReq("POST", BEOPLAY_URL_SHUFFLE, {})
 
     def Standby(self):
         self._postReq(
@@ -756,10 +763,10 @@ class BeoPlay(object):
         self._postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     def joinExperience(self):
-        self._postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, "")
+        self._postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, {})
 
     def leaveExperience(self):
-        self._postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE, "")
+        self._postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE, {})
 
     def playQueueItem(self, instantplay: bool, queueItem: dict):
         if instantplay:

@@ -64,6 +64,7 @@ async def main(host):
         def callback(json_data):
             print ("On State: " , gateway.on)
             print ("Source: ", gateway.source)
+            print ("Listeners: ", gateway.listeners)
             print ("Min Volume: " , gateway.min_volume)
             print ("Max Volume: " , gateway.max_volume)
             print ("Volume: " , gateway.volume)
