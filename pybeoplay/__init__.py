@@ -70,6 +70,7 @@ class BeoPlay(object):
         self.sources = []
         self.sourcesID = []
         self.sourcesBorrowed = []
+        self.listeners = []
         # The following are only going ot be valid after a call to getSoundModes
         # Sound modes
         self._soundMode = None
@@ -265,6 +266,7 @@ class BeoPlay(object):
         r = await self.async_getReq(BEOPLAY_URL_ACTIVE_SOURCES)
         if r:
             self.source = r["primaryExperience"]["source"]["friendlyName"] if "friendlyName" in r["primaryExperience"]["source"] else None
+            self.listeners = [listener["jid"] for listener in r["primaryExperience"]["listenerList"]["listener"]] if "listenerList" in r["primaryExperience"] else []
         return self.source
 
     # edited to only include in Use sources
@@ -602,6 +604,7 @@ class BeoPlay(object):
         r = self._getReq(BEOPLAY_URL_ACTIVE_SOURCES)
         if r:
             self.source = r["primaryExperience"]["source"]["friendlyName"] if "friendlyName" in r["primaryExperience"]["source"] else None
+            self.listeners = [listener["jid"] for listener in r["primaryExperience"]["listenerList"]["listener"]] if "listenerList" in r["primaryExperience"] else []
         return self.source
 
     def getStandby(self):
@@ -811,6 +814,10 @@ class BeoPlay(object):
 #        if data["notification"]["type"] == "SOURCE":
 #            self.primary_experience = data["primary"]
 
+    def _processSourceExperienceChanged(self, data):
+        if data["notification"]["type"] == "SOURCE_EXPERIENCE_CHANGED":
+            self.listeners = data["notification"]["data"]["primaryExperience"]["listener"]
+
     def _processState(self, data):
         """Progress information provides info about the current state of play. 
         It is only reliable if the device is on. """
@@ -917,6 +924,8 @@ class BeoPlay(object):
             self._processVolume(data)
             # get source
             self._processSource(data)
+            # get source experience
+            self._processSourceExperienceChanged(data)
             # get state
             self._processState(data)
             # get currently playing music info
