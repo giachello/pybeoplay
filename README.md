@@ -23,6 +23,7 @@ Currently gets the following attributes:
 - description (if available)
 - stand positions
 - sound modes
+- speaker groups / listeners
 
 The following commands are available:
 - set volume
