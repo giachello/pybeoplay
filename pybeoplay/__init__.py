@@ -752,14 +752,14 @@ class BeoPlay(object):
 
     def setStandPosition(self, standPosition):
         """Get sound modes if not already done."""
-        if not self._soundModes:
-            self.getSoundModes()
+        if not self._standPositions:
+            self.getStandPositions()
         
-        if standPosition not in self._soundModes:
+        if standPosition not in self._standPositions:
             raise ValueError("Stand position not available")
-        
-        standPositionID = self._soundModes[standPosition]
-        
+
+        standPositionID = self._standPositions.get(standPosition)
+
         self._postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     def joinExperience(self):
