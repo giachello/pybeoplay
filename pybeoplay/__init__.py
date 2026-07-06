@@ -356,7 +356,7 @@ class BeoPlay(object):
             self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
             self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
             self._softwareVersion = r["beoDevice"]["software"]["version"]
-            self._hardwareVersion = r["beoDevice"]["hardware"]["version"]
+            self._hardwareVersion = r["beoDevice"]["hardware"].get("version", "Unknown")
             self._typeName = r["beoDevice"]["productId"]["productType"]
             return self._serialNumber, self._name, self._typeNumber, self._itemNumber
         return
