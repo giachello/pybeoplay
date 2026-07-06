@@ -240,7 +240,7 @@ class BeoPlay(object):
                                 data.decode("utf-8").replace("\r", "").replace("\n", "")
                             )
                             if len(data) > 0:
-                                LOG.info("Update status: %s %s", self._name, data)
+                                LOG.debug("Update status: %s %s", self._name, data)
                                 data_json = json.loads(data)
                                 self._processNotification(data_json)
                                 if callback is not None:
