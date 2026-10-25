@@ -19,7 +19,7 @@ long_description = readme()
 setup(
         name=PACKAGE_NAME,
         version=VERSION,
-        license='MIT License',
+        license='MIT',
         url='https://github.com/giachello/pybeoplay',
         download_url='https://github.com/giachello/pybeoplay/tarball/'+VERSION,
         author='Giovanni Iachello',
@@ -27,7 +27,6 @@ setup(
         description='BeoPlay API for Python',
         long_description=long_description,
         long_description_content_type='text/markdown',
-        readme="README.md",
         packages=PACKAGES,
         include_package_data=True,
         zip_safe=False,
@@ -36,7 +35,6 @@ setup(
         keywords=['beoplay', 'pybeoplay', 'B&O' , 'Bang & Olufsen'],
         classifiers=[
             'Intended Audience :: Developers',
-            'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 3.9'
         ],
