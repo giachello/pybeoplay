@@ -87,7 +87,7 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def host(self):
         """Return the device host."""
         return self._host
-    
+
     @property
     def name(self):
         """Return the device name."""
@@ -132,12 +132,17 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def digits(self):
         """Get the list of available digits"""
         return BEOPLAY_DIGITS
-    
+
+    @property
+    def oneway_commands(self):
+        """Get the list of available one-way commands"""
+        return BEOPLAY_ONEWAY_COMMANDS
+
     @property
     def soundMode(self):
         """Get the current sound modes"""
         return self._soundMode
-    
+
     @property
     def soundModes(self):
         """Get the list of available sound modes"""
@@ -152,12 +157,12 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def standPosition(self):
         """Get the current stand position"""
         return self._standPosition
-    
+
     @property
     def standPositions(self):
         """Get the list of available stand positions"""
         return self._standPositions
-    
+
     ###############################################################
     # ASYNC BASED NETWORK CALLS
     ###############################################################
@@ -308,7 +313,7 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 self.on = False
             return self.on
         return False
-    
+
     async def async_get_sound_mode(self):
         """Returns the current sound mode, or None if not retrieved."""
         self._soundMode = None
@@ -328,7 +333,7 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
                     self._soundMode = element["friendlyName"]
             return self._soundModes
         return
-    
+
     async def async_get_stand_position(self):
         """Returns the stand position, or None if not retrieved."""
         self._standPosition = None
@@ -421,6 +426,7 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.on = True
 
     async def async_set_source(self, source):
+        """Set the active source."""
         i = 0
         while i < len(self.sources):
             if self.sources[i] == source:
@@ -433,33 +439,29 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
             i += 1
 
     async def async_set_sound_mode(self, soundMode):
-        # get sound modes if not already done
+        """Get sound modes if not already done"""
         if not self._soundModes:
             await self.async_get_sound_modes()
-        
         if soundMode not in self._soundModes:
             raise ValueError("Sound mode not available")
-        
         soundModeId = self._soundModes[soundMode]
-        
         await self.async_postReq("PUT", BEOPLAY_URL_SET_SOUND_MODE, {"active": soundModeId})
-            
 
     async def async_set_stand_position(self, standPosition):
+        """Set the active stand position."""
         if not self._standPositions:
             await self.async_get_stand_positions()
-        
         if standPosition not in self._standPositions:
             raise ValueError("Stand position not available")
-
         standPositionID = self._standPositions.get(standPosition, None)
-
         await self.async_postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     async def async_join_experience(self):
+        """Join the current experience."""
         await self.async_postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, {})
 
     async def async_leave_experience(self):
+        """Leave the current experience."""
         await self.async_postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE, {})
 
     async def async_play_queue_item(self, instantplay: bool, queueItem: dict):
@@ -508,32 +510,44 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """
         Send a remote command to the device. Command needs to be one of:  
 
-        Cursor/Select, Cursor/Up, Cursor/Down, Cursor/Left, Cursor/Right, Cursor/Exit, Cursor/Back, Cursor/PageUp, Cursor/PageDown, Cursor/Clear, 
-        Stream/Play, Stream/Stop, Stream/Pause, Stream/Wind, Stream/Rewind, Stream/Forward, Stream/Backward, 
+        Cursor/Select, Cursor/Up, Cursor/Down, Cursor/Left, Cursor/Right, Cursor/Exit, 
+        Cursor/Back, Cursor/PageUp, Cursor/PageDown, Cursor/Clear, 
+        Stream/Play, Stream/Stop, Stream/Pause, Stream/Wind, Stream/Rewind, Stream/Forward, 
+        Stream/Backward, 
         List/StepUp, List/StepDown, List/PreviousElement, List/Shuffle, List/Repeat, 
-        Menu/Root, Menu/Option, Menu/Setup, Menu/Contents, Menu/Favorites, Menu/ElectronicProgramGuide, Menu/VideoOnDemand, Menu/Text, Menu/HbbTV,Menu/HomeControl, 
-        Device/Information, Device/Eject, Device/TogglePower, Device/Languages, Device/Subtitles, Device/OneWayJoin, Device/Mots, 
-        Record/Record, 
+        Menu/Root, Menu/Option, Menu/Setup, Menu/Contents, Menu/Favorites, 
+        Menu/ElectronicProgramGuide, Menu/VideoOnDemand, Menu/Text, Menu/HbbTV,Menu/HomeControl, 
+        Device/Information, Device/Eject, Device/TogglePower, Device/Languages, Device/Subtitles, 
+        Device/OneWayJoin, Device/Mots, Record/Record, 
         Generic/Blue, Generic/Red, Generic/Green, Generic/Yellow.
         
-        toBeReleased: true if this is a button press that is held. Needs to be completed by calling async_remote_release.
+        toBeReleased: true if this is a button press that is held. Needs to be completed by 
+        calling async_remote_release.
 
         """
-        if (command not in BEOPLAY_REMOTE_COMMANDS):
+        if command not in BEOPLAY_REMOTE_COMMANDS:
             return
         await self.async_postReq("POST", BEOPLAY_REMOTE_PREFIX + command, {"toBeReleased": toBeReleased})
 
     async def async_remote_release(self, command : str):
-        if (command not in BEOPLAY_REMOTE_COMMANDS):
+        """Release a previously held remote command."""
+        if command not in BEOPLAY_REMOTE_COMMANDS:
             return
         await self.async_postReq("POST", BEOPLAY_REMOTE_PREFIX + command + BEOPLAY_URL_RELEASE, {})
+
+    async def async_oneway_command(self, command: str):
+        """Send a one-way command to the device. See the oneway_commands property for valid 
+        values."""
+        if command not in BEOPLAY_ONEWAY_COMMANDS:
+            return
+        await self.async_postReq("POST", BEOPLAY_ONEWAY, {BEOPLAY_ONEWAY_KEY: command})
 
     async def async_digits(self, digit : str):
         """
         Send a digit keypress to the device. Digits are 0-9  
 
         """
-        if (digit not in BEOPLAY_DIGITS):
+        if digit not in BEOPLAY_DIGITS:
             return
         await self.async_postReq("POST", BEOPLAY_DIGITS_URL, {BEOPLAY_DIGITS_KEY: int(digit)})
 
@@ -773,6 +787,12 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
     def leaveExperience(self):
         self._postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE, {})
+
+    def oneway_command(self, command: str):
+        """Send a one-way command to the device. See the oneway_commands property for valid values."""
+        if command not in BEOPLAY_ONEWAY_COMMANDS:
+            return
+        self._postReq("POST", BEOPLAY_ONEWAY, {BEOPLAY_ONEWAY_KEY: command})
 
     def playQueueItem(self, instantplay: bool, queueItem: dict):
         if instantplay:
