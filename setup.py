@@ -2,12 +2,12 @@ import os
 from setuptools import setup, find_packages
 
 def readme():
-    with open('README.md') as f:
+    with open('README.md', encoding='utf-8') as f:
         return f.read()
 
 PACKAGE_NAME = 'pybeoplay'
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = '2.8.2'
+VERSION = '2.8.3'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*', 'dist', 'ccu', 'build'])
 

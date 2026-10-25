@@ -9,20 +9,22 @@ https://widdowquinn.github.io/coding/update-pypi-package/
 
 """
 
-import requests
-import aiohttp
 import asyncio
-from aiohttp import ClientResponse
 import json
 import logging
 from typing import Optional
+import requests
+import aiohttp
+from aiohttp import ClientResponse
 from .const import *
 
 
 LOG = logging.getLogger(__name__)
 
 
-class BeoPlay(object):
+class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
+    """Provide synchronous and asynchronous access to a BeoPlay device."""
+
     def __init__(self, host, session: Optional[aiohttp.ClientSession] = None):
         """Initializes a BeoPlay connection to the speaker / TV
         Host: the IP address of the speaker
@@ -172,38 +174,40 @@ class BeoPlay(object):
                 LOG.debug("Request Status: %s", str(resp.status))
                 if resp.status != 200:
                     return None
-                json = await resp.json()
-                LOG.debug("Request Json: %s", json)
-                return json
+                json_response = await resp.json()
+                LOG.debug("Request Json: %s", json_response)
+                return json_response
         except (asyncio.TimeoutError, aiohttp.ClientError) as _e:
             LOG.info("Client error %s on %s" , str(_e), self._name)
             raise
 
-    async def async_postReq(self, type, path, jsondata: dict = {}):
+    async def async_postReq(self, post_type, path, jsondata: dict ):
         """Non blocking POST call to the speaker, with a given path and JSON data.
         type: PUT POST or DELETE
         path: the path of the request
         data: JSON data for the POST, in the form of Python dict/arrays
         """
+        if jsondata is None:
+            jsondata = {}
         if self._clientsession is None:
             LOG.error("Attempt asyncio with no ClientSession")
             return
         try:
-            if type == "PUT":
+            if post_type == "PUT":
                 async with self._clientsession.put(
                     BASE_URL.format(self._host, path), json=jsondata, timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
                     LOG.debug("Status: %s", resp.status)
                     if resp.status != 200:
                         return False
-            elif type == "POST":
+            elif post_type == "POST":
                 async with self._clientsession.post(
                     BASE_URL.format(self._host, path), json=jsondata, timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
                     LOG.debug("Status: %s", resp.status)
                     if resp.status != 200:
                         return False
-            elif type == "DELETE":
+            elif post_type == "DELETE":
                 async with self._clientsession.delete(
                     BASE_URL.format(self._host, path), timeout=aiohttp.ClientTimeout(total=TIMEOUT)
                 ) as resp:
@@ -355,7 +359,7 @@ class BeoPlay(object):
             self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
             self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
             self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
-            self._softwareVersion = r["beoDevice"]["software"]["version"]
+            self._softwareVersion = r["beoDevice"]["software"].get("version", "Unknown")
             self._hardwareVersion = r["beoDevice"]["hardware"].get("version", "Unknown")
             self._typeName = r["beoDevice"]["productId"]["productType"]
             return self._serialNumber, self._name, self._typeNumber, self._itemNumber
@@ -453,10 +457,10 @@ class BeoPlay(object):
         await self.async_postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
 
     async def async_join_experience(self):
-        await self.async_postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE)
+        await self.async_postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, {})
 
     async def async_leave_experience(self):
-        await self.async_postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE)
+        await self.async_postReq("DELETE", BEOPLAY_URL_LEAVE_EXPERIENCE, {})
 
     async def async_play_queue_item(self, instantplay: bool, queueItem: dict):
         """Play a queue item, from Deezer, TuneIn or DLNA.
@@ -553,20 +557,22 @@ class BeoPlay(object):
             self._connfail = CONNFAILCOUNT
             return None
 
-    def _postReq(self, type, path, data: dict = {}):
+    def _postReq(self, post_type, path, data: dict ):
+        if data is None:
+            data = {}
         try:
             r = None
             if self._connfail:
                 LOG.debug("Connfail: %i", self._connfail)
                 self._connfail -= 1
                 return False
-            if type == "PUT":
+            if post_type == "PUT":
                 r = requests.put(
                     BASE_URL.format(self._host, path),
                     json=data,
                     timeout=TIMEOUT,
                 )
-            elif type == "POST":
+            elif post_type == "POST":
                 if data is None or data == "":
                     r = requests.post(
                         BASE_URL.format(self._host, path), timeout=TIMEOUT
@@ -577,7 +583,7 @@ class BeoPlay(object):
                         json=data,
                         timeout=TIMEOUT,
                     )
-            elif type == "DELETE":
+            elif post_type == "DELETE":
                 r = requests.delete(BASE_URL.format(self._host, path), timeout=TIMEOUT)
             if r:
                 LOG.debug("Response: %s", r.content)
@@ -668,8 +674,8 @@ class BeoPlay(object):
             self._name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
             self._typeNumber = r["beoDevice"]["productId"]["typeNumber"]
             self._itemNumber = r["beoDevice"]["productId"]["itemNumber"]
-            self._softwareVersion = r["beoDevice"]["software"]["version"]
-            self._hardwareVersion = r["beoDevice"]["hardware"]["version"]
+            self._softwareVersion = r["beoDevice"]["software"].get("version", "Unknown")
+            self._hardwareVersion = r["beoDevice"]["hardware"].get("version", "Unknown")
             self._typeName = r["beoDevice"]["productId"]["productType"]
     ###############################################################
     # COMMANDS - Blocking
