@@ -47,5 +47,5 @@ On the remote functionality, the following key presses are available:
 
 The digits ```0-9```
 
-And the following One Way commands (thanks) 
+And the following One Way commands (thanks to [@pieterhoekstra](https://github.com/pieterhoekstra) ) 
 `CURSOR_UP, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_DOWN, BACK, MENU, SELECT, STEP_UP, STEP_DOWN, VOLUME_UP, VOLUME_DOWN, REWIND, PLAY, WIND, STANDBY, RELEASE, PMUTE`.
