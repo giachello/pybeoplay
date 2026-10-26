@@ -63,6 +63,7 @@ BEOPLAY_DIGITS_KEY = 'digits'
 
 BEOPLAY_ONEWAY = 'BeoOneWay/Input'
 BEOPLAY_ONEWAY_KEY = 'command'
+BEOPLAY_ONEWAY_TIMESTAMP_KEY = 'timestamp'
 BEOPLAY_ONEWAY_COMMANDS = ['CURSOR_UP', 'CURSOR_LEFT', 'CURSOR_RIGHT', 'CURSOR_DOWN', 'BACK', 
                            'MENU', 'SELECT', 'STEP_UP', 'STEP_DOWN', 'VOLUME_UP', 'VOLUME_DOWN', 
                            'REWIND', 'PLAY', 'WIND', 'STANDBY', 'RELEASE', 'PMUTE']

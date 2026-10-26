@@ -35,6 +35,14 @@ async def test_digits(gateway : BeoPlay):
     await asyncio.sleep(2)
     await gateway.async_digits('99')
 
+async def test_oneway_command(gateway : BeoPlay):
+    await asyncio.sleep(3)
+    await gateway.async_oneway_command('CURSOR_UP')
+    await asyncio.sleep(4)
+    await gateway.async_oneway_command('STANDBY')
+    await asyncio.sleep(1)
+    await gateway.async_oneway_command('RELEASE')
+
 async def main(host):
     timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout = timeout) as session:

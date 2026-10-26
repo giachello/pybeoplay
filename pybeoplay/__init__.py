@@ -12,6 +12,7 @@ https://widdowquinn.github.io/coding/update-pypi-package/
 import asyncio
 import json
 import logging
+import time
 from typing import Optional
 import requests
 import aiohttp
@@ -540,7 +541,11 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
         values."""
         if command not in BEOPLAY_ONEWAY_COMMANDS:
             return
-        await self.async_postReq("POST", BEOPLAY_ONEWAY, {BEOPLAY_ONEWAY_KEY: command})
+        await self.async_postReq(
+            "POST",
+            BEOPLAY_ONEWAY,
+            {BEOPLAY_ONEWAY_KEY: command, BEOPLAY_ONEWAY_TIMESTAMP_KEY: int(time.time())},
+        )
 
     async def async_digits(self, digit : str):
         """
@@ -792,7 +797,11 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """Send a one-way command to the device. See the oneway_commands property for valid values."""
         if command not in BEOPLAY_ONEWAY_COMMANDS:
             return
-        self._postReq("POST", BEOPLAY_ONEWAY, {BEOPLAY_ONEWAY_KEY: command})
+        self._postReq(
+            "POST",
+            BEOPLAY_ONEWAY,
+            {BEOPLAY_ONEWAY_KEY: command, BEOPLAY_ONEWAY_TIMESTAMP_KEY: int(time.time())},
+        )
 
     def playQueueItem(self, instantplay: bool, queueItem: dict):
         if instantplay:
