@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import responses
 
 from pybeoplay import BeoPlay
@@ -10,7 +12,7 @@ LOG = logging.getLogger(__name__)
 @responses.activate
 def test_standpositions(gateway: BeoPlay):
     # register via direct arguments
-    with open('standpositionstest.json', 'r') as file:
+    with open(Path(__file__).resolve().parent.parent / 'standpositionstest.json', 'r') as file:
         content = file.read()    
         file.close()
     responses.add(
@@ -20,7 +22,7 @@ def test_standpositions(gateway: BeoPlay):
         status=200,
     )
 
-    with open('standpositiontest.json', 'r') as file:
+    with open(Path(__file__).resolve().parent.parent / 'standpositiontest.json', 'r') as file:
         content = file.read()  
         file.close()  
     responses.add(

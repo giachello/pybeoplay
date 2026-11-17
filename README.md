@@ -49,3 +49,28 @@ The digits ```0-9```
 
 And the following One Way commands (thanks) 
 `CURSOR_UP, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_DOWN, BACK, MENU, SELECT, STEP_UP, STEP_DOWN, VOLUME_UP, VOLUME_DOWN, REWIND, PLAY, WIND, STANDBY, RELEASE, PMUTE`.
+Speaker groups (TV only) can be fetched and selected by friendly name:
+
+```python
+groups = device.getSpeakerGroups()  # {"Start-up": 0, "Cinema": 1, ...}
+active = device.speakerGroup       # Active group name from the last fetch
+device.setSpeakerGroup("Cinema")
+active = device.getSpeakerGroup()  # Fetch the current active group name
+```
+
+The async equivalents are `async_get_speaker_groups()`,
+`async_get_speaker_group()`, and `async_set_speaker_group(name)`.
+`device.speakerGroups` contains the last fetched name-to-ID mapping. Selecting
+an unknown name raises `ValueError`; selection fetches the groups first if the
+cache is empty.
+
+Expand the current experience to another device using its product JID:
+
+```python
+device.expand("2730.1200322.28760191@products.bang-olufsen.com")
+# Or with an aiohttp session supplied to BeoPlay:
+await device.async_expand("2730.1200322.28760191@products.bang-olufsen.com")
+```
+
+Selection and expand methods return whether the request succeeded. Fetching
+speaker groups returns `None` if unavailable, or a dictionary (possibly empty).

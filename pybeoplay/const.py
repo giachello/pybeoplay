@@ -67,3 +67,7 @@ BEOPLAY_ONEWAY_TIMESTAMP_KEY = 'timestamp'
 BEOPLAY_ONEWAY_COMMANDS = ['CURSOR_UP', 'CURSOR_LEFT', 'CURSOR_RIGHT', 'CURSOR_DOWN', 'BACK', 
                            'MENU', 'SELECT', 'STEP_UP', 'STEP_DOWN', 'VOLUME_UP', 'VOLUME_DOWN', 
                            'REWIND', 'PLAY', 'WIND', 'STANDBY', 'RELEASE', 'PMUTE']
+
+BEOPLAY_URL_GET_SPEAKER_GROUP = 'BeoZone/Zone/Sound/SpeakerGroup'
+BEOPLAY_URL_SET_SPEAKER_GROUP = 'BeoZone/Zone/Sound/SpeakerGroup/Active'
+BEOPLAY_URL_EXPAND = 'BeoZone/Zone/ActiveSources/primaryExperience'

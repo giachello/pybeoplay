@@ -79,6 +79,8 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
         # Sound modes
         self._soundMode = None
         self._soundModes = {}
+        self._speakerGroup = None
+        self._speakerGroups = {}
         # The following are only going ot be valid after a call to getStandPosition
         # Stand control
         self._standPosition = None
@@ -153,6 +155,30 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def soundModesID(self):
         """Get the list of available sound mode IDs"""
         return list(self._soundModes.values())
+
+    @property
+    def speakerGroup(self):
+        """Return the active speaker group name, if known."""
+        return self._speakerGroup
+
+    @property
+    def speakerGroups(self):
+        """Return available speaker group names mapped to their IDs (TV only)."""
+        return self._speakerGroups
+
+    def _updateSpeakerGroups(self, response):
+        """Replace cached speaker groups with the latest device response."""
+        self._speakerGroup = None
+        self._speakerGroups = {}
+        if not response or response.get("speakerGroup") is None:
+            return None
+        groups = response["speakerGroup"]
+        active = groups.get("active")
+        for group in groups.get("list", []):
+            self._speakerGroups[group["friendlyName"]] = group["id"]
+            if active is not None and group["id"] == active:
+                self._speakerGroup = group["friendlyName"]
+        return self._speakerGroups
 
     @property
     def standPosition(self):
@@ -335,6 +361,17 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
             return self._soundModes
         return
 
+    async def async_get_speaker_groups(self):
+        """Fetch speaker groups and the active group (TV only)."""
+        return self._updateSpeakerGroups(
+            await self.async_getReq(BEOPLAY_URL_GET_SPEAKER_GROUP)
+        )
+
+    async def async_get_speaker_group(self):
+        """Fetch and return the active speaker group name (TV only)."""
+        await self.async_get_speaker_groups()
+        return self._speakerGroup
+
     async def async_get_stand_position(self):
         """Returns the stand position, or None if not retrieved."""
         self._standPosition = None
@@ -456,6 +493,23 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
             raise ValueError("Stand position not available")
         standPositionID = self._standPositions.get(standPosition, None)
         await self.async_postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
+
+    async def async_set_speaker_group(self, speakerGroup):
+        """Select a speaker group by friendly name (TV only)."""
+        if not self._speakerGroups:
+            await self.async_get_speaker_groups()
+        if speakerGroup not in self._speakerGroups:
+            raise ValueError("Speaker group not available")
+        return await self.async_postReq(
+            "PUT", BEOPLAY_URL_SET_SPEAKER_GROUP,
+            {"active": self._speakerGroups[speakerGroup]},
+        )
+
+    async def async_expand(self, jid):
+        """Add the device identified by its JID to the current experience."""
+        return await self.async_postReq(
+            "POST", BEOPLAY_URL_EXPAND, {"listener": {"jid": jid}}
+        )
 
     async def async_join_experience(self):
         """Join the current experience."""
@@ -667,6 +721,15 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
             return self._soundModes
         return None
 
+    def getSpeakerGroups(self):
+        """Fetch speaker groups and the active group (TV only)."""
+        return self._updateSpeakerGroups(self._getReq(BEOPLAY_URL_GET_SPEAKER_GROUP))
+
+    def getSpeakerGroup(self):
+        """Fetch and return the active speaker group name (TV only)."""
+        self.getSpeakerGroups()
+        return self._speakerGroup
+
     def getStandPosition(self):
         self._standPosition = None
         r = self._getReq(BEOPLAY_URL_STAND_ACTIVE)
@@ -786,6 +849,21 @@ class BeoPlay:  # pylint: disable=too-many-instance-attributes,too-many-public-m
         standPositionID = self._standPositions.get(standPosition)
 
         self._postReq("PUT", BEOPLAY_URL_STAND_ACTIVE, {"active": standPositionID})
+
+    def setSpeakerGroup(self, speakerGroup):
+        """Select a speaker group by friendly name (TV only)."""
+        if not self._speakerGroups:
+            self.getSpeakerGroups()
+        if speakerGroup not in self._speakerGroups:
+            raise ValueError("Speaker group not available")
+        return self._postReq(
+            "PUT", BEOPLAY_URL_SET_SPEAKER_GROUP,
+            {"active": self._speakerGroups[speakerGroup]},
+        )
+
+    def expand(self, jid):
+        """Add the device identified by its JID to the current experience."""
+        return self._postReq("POST", BEOPLAY_URL_EXPAND, {"listener": {"jid": jid}})
 
     def joinExperience(self):
         self._postReq("POST", BEOPLAY_URL_JOIN_EXPERIENCE, {})
