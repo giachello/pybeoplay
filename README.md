@@ -25,6 +25,8 @@ Currently gets the following attributes:
 - sound modes
 - speaker groups / listeners
 
+## API Commands
+
 The following commands are available:
 - set volume
 - set mute
@@ -41,7 +43,9 @@ The following commands are available:
 - set stand position
 - set sound mode
 
-On the remote functionality, the following key presses are available:
+## Remote functionality
+
+On the remote function, the following key presses are available:
 
 ```Cursor/Select, Cursor/Up, Cursor/Down, Cursor/Left, Cursor/Right, Cursor/Exit, Cursor/Back, Cursor/PageUp, Cursor/PageDown, Cursor/Clear, Stream/Play, Stream/Stop, Stream/Pause, Stream/Wind, Stream/Rewind, Stream/Forward, Stream/Backward, List/StepUp, List/StepDown, List/PreviousElement, List/Shuffle, List/Repeat, Menu/Root, Menu/Option, Menu/Setup, Menu/Contents, Menu/Favorites, Menu/ElectronicProgramGuide, Menu/VideoOnDemand, Menu/Text, Menu/HbbTV,Menu/HomeControl, Device/Information, Device/Eject, Device/TogglePower, Device/Languages, Device/Subtitles, Device/OneWayJoin, Device/Mots, Record/Record, Generic/Blue, Generic/Red, Generic/Green, Generic/Yellow,``` 
 
@@ -49,6 +53,9 @@ The digits ```0-9```
 
 And the following One Way commands (thanks to [@pieterhoekstra](https://github.com/pieterhoekstra) ) 
 `CURSOR_UP, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_DOWN, BACK, MENU, SELECT, STEP_UP, STEP_DOWN, VOLUME_UP, VOLUME_DOWN, REWIND, PLAY, WIND, STANDBY, RELEASE, PMUTE`.
+
+## Speaker Groups
+
 Speaker groups (TV only) can be fetched and selected by friendly name:
 
 ```python
@@ -63,6 +70,8 @@ The async equivalents are `async_get_speaker_groups()`,
 `device.speakerGroups` contains the last fetched name-to-ID mapping. Selecting
 an unknown name raises `ValueError`; selection fetches the groups first if the
 cache is empty.
+
+## Expand
 
 Expand the current experience to another device using its product JID:
 
